@@ -7,14 +7,20 @@ import { schemeGreens } from "d3-scale-chromatic"
 import { feature } from "topojson-client"
 import data from "./data/valladolid.topo.json"
 
+// helpers
+const styler = (node, style = {}) => Object.entries(style).forEach(([prop,val]) => node.style(prop,val))
+const percent = (num = 0) => num.toLocaleString(undefined, { style: "percent" })
+const formatDate = (date = new Date()) => date.toLocaleDateString(undefined, { year: "2-digit", month: "short"})
+const parser = ({ name, a, b, date: d }) => ({ name, result: +b !== 0 ? 1 - (+a/+b) : 0, date: new Date(d) })
+
+// projections
 const projection = geoMercator()
 const path = geoPath(projection)
 const feat = feature(data, data.objects.valladolid)
 
-const styler = (node, style = {}) => Object.entries(style).forEach(([prop,val]) => node.style(prop,val))
-
+// static elements
 const map = select("#map")
-styler(map, { width: "100%", height: "100%" })
+styler(map, { width: "100%", height: "100%" }) // perhaps one line
 
 const { width, height } = map.node().getBoundingClientRect()
 const svg = map
@@ -22,17 +28,23 @@ const svg = map
   .attr("viewBox", [0, 0, width, height])
 
 const tooltip = map.append("div")
-  .style("position", "absolute")
-  .style("opacity", 0)
+styler(tooltip, { 
+  opacity: 0,
+  position: "absolute",
+  background: "#fff",
+  border: "1px solid #eee",
+  padding: "5px",
+  "box-shadow": "0px 0px 10px 0px rgba(0,0,0,0.75)",
+  "border-radius": "5px",
+  "transition": "opacity 250ms"ç
+})
 
-dsv(";", "./data/report.202012.csv", ({ name, a, b, date: d }) => ({ name, result: +b !== 0 ? 1 - (+a/+b) : 0, date: new Date(d).getMonth() })).then(r => {
-
-  const months = [... new Set(r.map(({ date }) => date))].sort()
-  const [currentMonth] = months.slice(-1)
+// render
+const render = r => {
   const { features } = feat
   const edited = features.map(f => {
     const { properties: { nombre }} = f
-    const match = r.find(({ name, date }) => name === nombre && date === currentMonth)
+    const match = r.find(({ name, date }) => name === nombre && date.getMonth() === currentMonth)
 
     return { ...f, properties: { ...f.properties, ...match }}
   })
@@ -61,7 +73,6 @@ dsv(";", "./data/report.202012.csv", ({ name, a, b, date: d }) => ({ name, resul
     .attr("dy", (_, i) => `${i}em`)
     .text(d => {
       const [start, end] = color.invertExtent(d)
-      const percent = (num = 0)=> num.toLocaleString(undefined, { style: "percent" })
       return `${percent(start)} - ${percent(end)}`
     })
     
@@ -76,16 +87,26 @@ dsv(";", "./data/report.202012.csv", ({ name, a, b, date: d }) => ({ name, resul
     .attr("fill", ({ properties: { result }}) => color(result))
     .attr("stroke","steelblue")
     .on("mouseenter", ({ pageX, pageY }, { properties: {name, date, result} }) => {
-       styler(tooltip, { opacity: 1, top: `${pageY}px`, left: `${pageX}px`, background: "#fff", border: "1px solid #eee", padding: "5px", "box-shadow": "0px 0px 10px 0px rgba(0,0,0,0.75)", "border-radius": "5px", "transition": "opacity 250ms" })
+       styler(tooltip, { opacity: 1, top: `${pageY}px`, left: `${pageX}px` })
        
-       tooltip.html(`${name} (${date.toLocaleDateString(undefined, { year: "2-digit", month: "short"})}): ${result.toLocaleString(undefined, { style: "percent" })}`)
+       tooltip.html(`${name} (${formatDate(date)}): ${percent(result)}`)
     })
-    .on("mouseleave", (e) => {
-      styler(tooltip, { opacity: 0 })
-    })
+    .on("mouseleave", (e) => styler(tooltip, { opacity: 0 }))
 
   items
     .exit()
     .remove()
+}
+
+// request data
+let currentMonth = 0
+dsv(";", "./data/report.202012.csv", parser).then(r => {
+  const months = [... new Set(r.map(({ date }) => date.getMonth()))].sort()
+  
+  let i = 0
+  setInterval(() => {
+    render(r)
+    currentMonth = months[i++]
+  }, 1000)
 })
 

@@ -2,66 +2,103 @@ import { geoMercator, geoPath } from "d3-geo"
 import { select } from "d3-selection"
 import { dsv } from "d3-fetch"
 import { extent } from "d3-array"
+import { transition } from "d3-transition"
 import { scaleQuantile } from "d3-scale"
 import { schemeGreens } from "d3-scale-chromatic"
 import { feature } from "topojson-client"
 import data from "./data/valladolid.topo.json"
 
+// constants
+const INTERVAL_TIME = 1500
+
+// variables
+let width = 0
+let height = 0
+
+// helpers
+const styler = (node, style = {}) => {
+  Object.entries(style).forEach(([prop,val]) => node.style(prop,val))
+  return node
+}
+const percent = (num = 0) => num.toLocaleString(undefined, { style: "percent" })
+const formatDate = (date = new Date(), opts = {}) => date.toLocaleDateString(undefined, opts)
+const parser = ({ name, a, b, date: d }) => ({ name, result: +b !== 0 ? 1 - (+a/+b) : 0, date: new Date(d) })
+
+// projections
 const projection = geoMercator()
 const path = geoPath(projection)
 const feat = feature(data, data.objects.valladolid)
 
-const styler = (node, style = {}) => Object.entries(style).forEach(([prop,val]) => node.style(prop,val))
+// static elements
+const map = styler(select("#map"), { width: "100%", height: "100%" })
+const svg = map.append("svg")
+const gi = svg.append("g") //mitems
+const gl = svg.append("g") //legend
+const gm = svg.append("g") //month
+const tooltip = styler(map.append("div"), { 
+  opacity: 0,
+  position: "absolute",
+  background: "#fff",
+  border: "1px solid #eee",
+  padding: "5px",
+  "box-shadow": "0px 0px 10px 0px rgba(0,0,0,0.75)",
+  "border-radius": "5px",
+  "transition": "opacity 250ms"
+})
 
-const map = select("#map")
-styler(map, { width: "100%", height: "100%" })
+// render functions
+const size = (fn = x => x) => {
+  ({ width: width, height: height } = map.node().getBoundingClientRect())
+  svg.attr("viewBox", [0, 0, width, height])
+  projection.fitSize([width,height], feat);
 
-const { width, height } = map.node().getBoundingClientRect()
-const svg = map
-  .append("svg")
-  .attr("viewBox", [0, 0, width, height])
+  return fn()
+}
 
-const tooltip = map.append("div")
-  .style("position", "absolute")
-  .style("opacity", 0)
-
-dsv(";", "./data/report.202012.csv", ({ name, a, b, date: d }) => ({ name, result: +b !== 0 ? 1 - (+a/+b) : 0, date: new Date(d) })).then(r => {
-
-  const months = [... new Set(r.map(({ date }) => date.getMonth()))].sort()
-  const [currentMonth] = months.slice(-1)
+const render = (data = [], currentMonth = 0) => {
   const { features } = feat
+  // merge geodata with csvdata
   const edited = features.map(f => {
     const { properties: { nombre }} = f
-    const match = r.find(({ name, date }) => name === nombre && date.getMonth() === currentMonth)
+    const match = data.find(({ name, date }) => name === nombre && date.getMonth() === currentMonth)
 
     return { ...f, properties: { ...f.properties, ...match }}
   })
 
   feat.features = edited
-  projection.fitSize([width,height], feat);
 
   const range = schemeGreens[5]
-  const color = scaleQuantile(range).domain(extent(r, d => d.result))
-  const items = svg.append("g").selectAll("path").data(feat.features)
-  const legend = svg.append("g").selectAll("rect").data(range)
+  const color = scaleQuantile(range).domain(extent(data, ({ result }) => result))
+  
+  // draw elements
+  const items = gi.selectAll("path").data(feat.features)
+  const legend = gl.selectAll("rect").data(range)
+  const month = gm.selectAll("text").data([currentMonth])
+  const monthEnter = month.enter().append("text")
+  const rectEnter = legend.enter().append("rect")
+  const textEnter = legend.enter().append("text")
+  const pathEnter = items.enter().append("path")
   
   legend
-    .enter()
-    .append("rect")
-    .attr("width", "10px")
-    .attr("height", "10px")
-    .attr("y", (_, i) => `${i}em`)
+	.merge(rectEnter)
+	.transition()
+    .attr("width", "1em")
+    .attr("height", "1em")
+    .attr("x", width * 0.8)
+    .attr("y", (_, i) => `${1.2 * i}em`)
     .attr("fill", d => d)
+    .attr("transform", "translate(0 30)")
   
   legend
-    .enter()
-    .append("text")
+    .merge(textEnter)
+    .transition()
     .attr("dominant-baseline", "hanging")
-    .attr("dx", "15px")
-    .attr("dy", (_, i) => `${i}em`)
+    .attr("x", width * 0.8)
+    .attr("y", (_, i) => `${1.2 * i}em`)
+    .attr("dx", "1.2em")
+    .attr("transform", "translate(0 30)")
     .text(d => {
       const [start, end] = color.invertExtent(d)
-      const percent = (num = 0)=> num.toLocaleString(undefined, { style: "percent" })
       return `${percent(start)} - ${percent(end)}`
     })
     
@@ -69,23 +106,48 @@ dsv(";", "./data/report.202012.csv", ({ name, a, b, date: d }) => ({ name, resul
     .exit()
     .remove()
 
+  month
+	.merge(monthEnter)
+	.transition()
+	.attr("x", width * 0.75)
+	.attr("dominant-baseline", "hanging")
+	.attr("font-size", "3em")
+	.attr("text-anchor", "end")
+	.attr("transform", "translate(0 30)")
+	.text(d => {
+	  const date = new Date()
+	  date.setMonth(d)
+	  return formatDate(date, { year: "2-digit", month: "short" })
+	})
+
   items
-    .enter()
-    .append("path")
-    .attr("d", d => path(d))
-    .attr("fill", ({ properties: { result }}) => color(result))
-    .attr("stroke","steelblue")
     .on("mouseenter", ({ pageX, pageY }, { properties: {name, date, result} }) => {
-       styler(tooltip, { opacity: 1, top: `${pageY}px`, left: `${pageX}px`, background: "#fff", border: "1px solid #eee", padding: "5px", "box-shadow": "0px 0px 10px 0px rgba(0,0,0,0.75)", "border-radius": "5px", "transition": "opacity 250ms" })
-       
-       tooltip.html(`${name} (${date.toLocaleDateString(undefined, { year: "2-digit", month: "short"})}): ${result.toLocaleString(undefined, { style: "percent" })}`)
+      styler(tooltip, { opacity: 1, top: `${pageY}px`, left: `${pageX}px` })
+      tooltip.html(`${name}: <em>${percent(result)}</em>`)
     })
-    .on("mouseleave", (e) => {
-      styler(tooltip, { opacity: 0 })
-    })
+    .on("mouseleave", (e) => styler(tooltip, { opacity: 0 }))
+    .merge(pathEnter)
+    .transition()
+    .attr("d", d => path(d))
+    .attr("fill", ({ properties: { result } = {}} = {}) => color(result))
+    .attr("stroke","white")
 
   items
     .exit()
     .remove()
-})
+}
 
+// request data
+dsv(";", "./data/report.202012.csv", parser).then(r => {
+  const months = [... new Set(r.map(({ date }) => date.getMonth()))].sort()
+  
+  let i = 0
+  // initial call with sizes
+  size(() => render(r, months[i]))
+  const interval = setInterval(() => {
+    render(r, months[i++])
+    if (i >= months.length) clearInterval(interval)
+  }, INTERVAL_TIME)
+  
+  window.addEventListener("resize", () => size(() => render(r, months[i])))
+})
