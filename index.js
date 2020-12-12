@@ -9,7 +9,9 @@ import { feature } from "topojson-client"
 import data from "./data/valladolid.topo.json"
 
 // constants
-const INTERVAL_TIME = 1500
+const INTERVAL_TIME = 1000
+const DELIMITER = ";"
+const REPORT_PATH = "./data/report.csv"
 
 // variables
 let width = 0
@@ -35,7 +37,7 @@ const svg = map.append("svg")
 const gi = svg.append("g") //mitems
 const gl = svg.append("g") //legend
 const gm = svg.append("g") //month
-const tooltip = styler(map.append("div"), { 
+const tooltip = styler(map.append("div"), {
   opacity: 0,
   position: "absolute",
   background: "#fff",
@@ -55,12 +57,12 @@ const size = (fn = x => x) => {
   return fn()
 }
 
-const render = (data = [], currentMonth = 0) => {
+const render = (data = [], { year: currentYear = 0, month: currentMonth = 0 } = {}) => {
   const { features } = feat
   // merge geodata with csvdata
   const edited = features.map(f => {
     const { properties: { nombre }} = f
-    const match = data.find(({ name, date }) => name === nombre && date.getMonth() === currentMonth)
+    const match = data.find(({ name, date }) => name === nombre && date.getMonth() === currentMonth && date.getFullYear() === currentYear)
 
     return { ...f, properties: { ...f.properties, ...match }}
   })
@@ -73,15 +75,15 @@ const render = (data = [], currentMonth = 0) => {
   // draw elements
   const items = gi.selectAll("path").data(feat.features)
   const legend = gl.selectAll("rect").data(range)
-  const month = gm.selectAll("text").data([currentMonth])
+  const month = gm.selectAll("text").data([{ currentYear, currentMonth }])
   const monthEnter = month.enter().append("text")
   const rectEnter = legend.enter().append("rect")
   const textEnter = legend.enter().append("text")
   const pathEnter = items.enter().append("path")
   
   legend
-	.merge(rectEnter)
-	.transition()
+    .merge(rectEnter)
+    .transition()
     .attr("width", "1em")
     .attr("height", "1em")
     .attr("x", width * 0.8)
@@ -107,18 +109,19 @@ const render = (data = [], currentMonth = 0) => {
     .remove()
 
   month
-	.merge(monthEnter)
-	.transition()
-	.attr("x", width * 0.75)
-	.attr("dominant-baseline", "hanging")
-	.attr("font-size", "3em")
-	.attr("text-anchor", "end")
-	.attr("transform", "translate(0 30)")
-	.text(d => {
-	  const date = new Date()
-	  date.setMonth(d)
-	  return formatDate(date, { year: "2-digit", month: "short" })
-	})
+    .merge(monthEnter)
+    .transition()
+    .attr("x", width * 0.75)
+    .attr("dominant-baseline", "hanging")
+    .attr("font-size", "3em")
+    .attr("text-anchor", "end")
+    .attr("transform", "translate(0 30)")
+    .text(({ currentYear, currentMonth }) => {
+      const date = new Date()
+      date.setMonth(currentMonth)
+      date.setFullYear(currentYear)
+      return formatDate(date, { year: "2-digit", month: "short" })
+    })
 
   items
     .on("mouseenter", ({ pageX, pageY }, { properties: {name, date, result} }) => {
@@ -138,9 +141,16 @@ const render = (data = [], currentMonth = 0) => {
 }
 
 // request data
-dsv(";", "./data/report.202012.csv", parser).then(r => {
-  const months = [... new Set(r.map(({ date }) => date.getMonth()))].sort()
-  
+dsv(DELIMITER, REPORT_PATH, parser).then(r => {
+  const months = [... new Set(r.map(({ date }) => JSON.stringify({ year: date.getFullYear(), month: date.getMonth() })))]
+    .map(JSON.parse)
+    .sort((a, b) => {
+      if (a.year > b.year) return 1
+      if (a.year < b.year) return -1
+      if (a.month > b.month) return 1
+      if (a.month < b.month) return -1
+    })
+
   let i = 0
   // initial call with sizes
   size(() => render(r, months[i]))
