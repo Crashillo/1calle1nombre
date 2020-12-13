@@ -1,0 +1,29 @@
+html {
+  width: 100vw;
+  height: 100vh;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  background-color: #fafafa;
+  padding: 1em;
+  box-sizing: border-box;
+}
+
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.tooltip {
+  opacity: 0;
+  position: absolute;
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 5px;
+  box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.75);
+  border-radius: 5px;
+  transition: opacity 250ms;
+}

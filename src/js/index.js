@@ -6,8 +6,8 @@ import { transition } from "d3-transition"
 import { scaleQuantile } from "d3-scale"
 import { schemeGreens } from "d3-scale-chromatic"
 import { feature } from "topojson-client"
-import TOPOJSON_PATH from "url:./valladolid.topo.json"
-import REPORT_PATH from "url:./report.csv"
+import TOPOJSON_PATH from "url:../static/valladolid.topo.json"
+import REPORT_PATH from "url:../static/report.csv"
 
 // constants
 const INTERVAL_TIME = 1000
@@ -29,21 +29,12 @@ const formatDate = (date = new Date(), opts = {}) => date.toLocaleDateString(und
 const parser = ({ name, a, b, date: d }) => ({ name, result: +b !== 0 ? 1 - (+a/+b) : 0, date: new Date(d) })
 
 // static elements
-const map = styler(select("#map"), { width: "100%", height: "100%" })
+const map = select("#map")
 const svg = map.append("svg")
 const gpath = svg.append("g")
 const glegend = svg.append("g")
 const gmonth = svg.append("g")
-const tooltip = styler(map.append("div"), {
-  opacity: 0,
-  position: "absolute",
-  background: "#fff",
-  border: "1px solid #eee",
-  padding: "5px",
-  "box-shadow": "0px 0px 10px 0px rgba(0,0,0,0.75)",
-  "border-radius": "5px",
-  "transition": "opacity 250ms"
-})
+const tooltip = map.append("div").attr("class", "tooltip")
 
 // map functions
 const size = (fn = x => x, params = {}) => {
