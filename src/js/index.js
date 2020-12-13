@@ -10,7 +10,7 @@ import TOPOJSON_PATH from "url:../static/cyl.topo.json"
 import REPORT_PATH from "url:../static/report.csv"
 
 // constants
-const INTERVAL_TIME = 1000
+const INTERVAL_TIME = 1500
 const DELIMITER = ";"
 const TOPOJSON_PROPERTY = "cyl"
 const projection = geoMercator()
@@ -29,6 +29,10 @@ const styler = (node, style = {}) => {
 const percent = (num = 0) => num.toLocaleString(undefined, { style: "percent" })
 const formatDate = (date = new Date(), opts = {}) => date.toLocaleDateString(undefined, opts)
 const parser = ({ name, a, b, date }) => ({ name, result: +b !== 0 ? 1 - (+a/+b) : 0, date })
+const formatLegendRange = d => {
+  const [start, end] = color.invertExtent(d)
+  return `${percent(start)} - ${percent(end)}`
+}
 
 // static elements
 const map = select("#map")
@@ -37,6 +41,16 @@ const gpath = svg.append("g")
 const glegend = svg.append("g")
 const gmonth = svg.append("g")
 const tooltip = map.append("div").attr("class", "tooltip")
+const legend = map.append("div").attr("class", "legend")
+const legendGenerator = (date, ranges) => {
+  const rangeItem = d => `<div class="legend__range"><i class="legend__range-square" style="background-color: ${d}"></i>${formatLegendRange(d)}</div>`
+  const dateItem = d => `<span class="legend__date-month">${formatDate(new Date(d), { year: "2-digit", month: "short" })}</span>`
+  
+  return `
+    <div class="legend__date">${dateItem(date)}</div>
+    <div class="legend__ranges">${ranges.map(d => rangeItem(d)).join("")}</div>
+  `
+}
 
 // map functions
 const size = (fn = x => x, params = {}) => {
@@ -51,49 +65,9 @@ const size = (fn = x => x, params = {}) => {
 
 const render = ({ geojson = {}, date }) => {
   const paths = gpath.selectAll("path").data(geojson.features)
-  const legend = glegend.selectAll("rect").data(range)
-  const month = gmonth.selectAll("text").data([date])
-  const monthEnter = month.enter().append("text")
-  const rectEnter = legend.enter().append("rect")
-  const textEnter = legend.enter().append("text")
   const pathEnter = paths.enter().append("path")
   
-  legend
-    .merge(rectEnter)
-    .transition()
-    .attr("width", "1em")
-    .attr("height", "1em")
-    .attr("x", width * 0.9)
-    .attr("y", (_, i) => `${1.2 * i}em`)
-    .attr("fill", d => d)
-    .attr("transform", "translate(0 30)")
-  
-  legend
-    .merge(textEnter)
-    .transition()
-    .attr("dominant-baseline", "hanging")
-    .attr("x", width * 0.9)
-    .attr("y", (_, i) => `${1.2 * i}em`)
-    .attr("dx", "1.2em")
-    .attr("transform", "translate(0 30)")
-    .text(d => {
-      const [start, end] = color.invertExtent(d)
-      return `${percent(start)} - ${percent(end)}`
-    })
-    
-  legend
-    .exit()
-    .remove()
-
-  month
-    .merge(monthEnter)
-    .transition()
-    .attr("x", width * 0.85)
-    .attr("dominant-baseline", "hanging")
-    .attr("font-size", "3em")
-    .attr("text-anchor", "end")
-    .attr("transform", "translate(0 30)")
-    .text(() => formatDate(new Date(date), { year: "2-digit", month: "short" }))
+  legend.html(legendGenerator(date, range))
 
   paths
     .on("mouseenter", ({ pageX, pageY }, { properties: { name, values } }) => {
@@ -103,6 +77,7 @@ const render = ({ geojson = {}, date }) => {
     .on("mouseleave", e => styler(tooltip, { opacity: 0 }))
     .merge(pathEnter)
     .transition()
+    .duration(INTERVAL_TIME)
     .attr("d", d => geoPath(projection)(d))
     .attr("fill", ({ properties: { values } = {}} = {}) => color(values[date]))
     .attr("stroke","white")
