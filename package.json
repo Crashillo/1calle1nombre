@@ -1,9 +1,9 @@
 {
   "name": "1calle1nombre",
   "version": "0.0.3",
-  "description": "",
+  "description": "Visto #1calle1nombre",
   "scripts": {
-    "start": "parcel serve ./src/index.html --no-hmr",
+    "start": "parcel serve ./src/index.html --open",
     "prebuild": "rm -rf ./dist/*",
     "build": "parcel build ./src/index.html --public-url ."
   },
