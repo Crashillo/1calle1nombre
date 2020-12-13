@@ -1,16 +1,17 @@
 {
   "name": "1calle1nombre",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "scripts": {
-    "start": "parcel serve ./index.html --no-hmr",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "parcel serve ./index.html --hmr-port 6543",
+    "prebuild": "rm -rf ./dist/*",
+    "build": "parcel build ./index.html"
   },
   "repository": {
     "type": "git",
     "url": "gitea@pi2:Crashillo/1calle1nombre.git"
   },
-  "author": "",
+  "author": "Crashillo",
   "license": "ISC",
   "dependencies": {
     "d3": "^6.3.1",
