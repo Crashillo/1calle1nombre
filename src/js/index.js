@@ -6,13 +6,14 @@ import { transition } from "d3-transition"
 import { scaleQuantile } from "d3-scale"
 import { schemeGreens } from "d3-scale-chromatic"
 import { feature } from "topojson-client"
-import TOPOJSON_PATH from "url:../static/cyl.topo.json"
+import { styler, percent, formatDate, parser, Timer } from "./helpers"
+import TOPOJSON_PATH from "url:../static/zamora.topo.json"
 import REPORT_PATH from "url:../static/report.csv"
 
 // constants
-const INTERVAL_TIME = 1500
+const INTERVAL_TIME = 200
 const DELIMITER = ";"
-const TOPOJSON_PROPERTY = "cyl"
+const TOPOJSON_PROPERTY = "zamora"
 const projection = geoMercator()
 const range = schemeGreens[5]
 const color = scaleQuantile(range).domain([0, 1])
@@ -20,36 +21,45 @@ const color = scaleQuantile(range).domain([0, 1])
 // variables
 let width = 0
 let height = 0
-
-// helpers
-const styler = (node, style = {}) => {
-  Object.entries(style).forEach(([prop,val]) => node.style(prop,val))
-  return node
-}
-const percent = (num = 0) => num.toLocaleString(undefined, { style: "percent" })
-const formatDate = (date = new Date(), opts = {}) => date.toLocaleDateString(undefined, opts)
-const parser = ({ name, a, b, date }) => ({ name, result: +b !== 0 ? 1 - (+a/+b) : 0, date })
-const formatLegendRange = d => {
-  const [start, end] = color.invertExtent(d)
-  return `${percent(start)} - ${percent(end)}`
-}
+let i = 0
 
 // static elements
 const map = select("#map")
 const svg = map.append("svg")
-const gpath = svg.append("g")
-const glegend = svg.append("g")
-const gmonth = svg.append("g")
-const tooltip = map.append("div").attr("class", "tooltip")
-const legend = map.append("div").attr("class", "legend")
-const legendGenerator = (date, ranges) => {
-  const rangeItem = d => `<div class="legend__range"><i class="legend__range-square" style="background-color: ${d}"></i>${formatLegendRange(d)}</div>`
-  const dateItem = d => `<span class="legend__date-month">${formatDate(new Date(d), { year: "2-digit", month: "short" })}</span>`
+const g = svg.append("g")
+const tooltip = map.append("div").attr("class", "tooltip card")
+const legendGenerator = (ranges) => {
+  const formatRange = d => {
+    const [start, end] = color.invertExtent(d)
+    return `${percent(start)} - ${percent(end)}`
+  }
+  const rangeItem = d => `<div class="legend__range"><i class="legend__range-square" style="background-color: ${d}"></i>${formatRange(d)}</div>`
   
-  return `
-    <div class="legend__date">${dateItem(date)}</div>
-    <div class="legend__ranges">${ranges.map(d => rangeItem(d)).join("")}</div>
-  `
+  return ranges.map(rangeItem).join("")
+}
+const controlsGenerator = (interval, max) => {
+  let timer = null
+  const play = () => { timer = setInterval(() => i < max ? interval() : clearInterval(timer), INTERVAL_TIME) }
+  const pause = () => { clearInterval(timer) }
+  const stop = () => { i = 0; clearInterval(timer); interval() }
+  const control = value => `<button id="${value}" class="control__button"><span class="control__button-${value}"></span></button>`
+
+  document.addEventListener("click", ({ target }) => {
+    const btnPlay = document.querySelector("#play")
+
+    if (target.id === "play" && btnPlay.classList.contains("paused")) {
+      pause()
+      btnPlay.classList.remove("paused")
+    } else if (target.id === "play") {
+      play()
+      btnPlay.classList.add("paused")
+    } else if (target.id === "stop") {
+      stop()
+      btnPlay.classList.remove("paused")
+    }
+  })
+  
+  return [ "stop", "play" ].map(control).join("")
 }
 
 // map functions
@@ -64,10 +74,10 @@ const size = (fn = x => x, params = {}) => {
 }
 
 const render = ({ geojson = {}, date }) => {
-  const paths = gpath.selectAll("path").data(geojson.features)
+  const month = g.selectAll("text").data([date])
+  const paths = g.selectAll("path").data(geojson.features)
   const pathEnter = paths.enter().append("path")
-  
-  legend.html(legendGenerator(date, range))
+  const monthEnter = month.enter().append("text")
 
   paths
     .on("mouseenter", ({ pageX, pageY }, { properties: { name, values } }) => {
@@ -85,6 +95,19 @@ const render = ({ geojson = {}, date }) => {
   paths
     .exit()
     .remove()
+
+  const text = month
+    .merge(monthEnter)
+    .attr("x", width)
+    .attr("fill", "white")
+    .attr("font-size", "3em")
+    .text(formatDate(new Date(date), { year: "2-digit", month: "short" }))
+    
+  const { height: h } = text.node().getBoundingClientRect()
+  
+  text
+    .attr("y", height - h)
+    .attr("text-anchor", "end")
 }
 
 // request data
@@ -108,16 +131,17 @@ Promise.all([fetch(TOPOJSON_PATH).then(r => r.json()), dsv(DELIMITER, REPORT_PAT
 
     const months = [... new Set(csv.map(({ date }) => date))].sort()
 
-    let i = 0
     // initial call to get sizes
     size(render, { geojson, date: months[i] })
+    // display the legend and controls
+    const sidebar = map.append("div").attr("class", "sidebar")
+    sidebar.append("div").attr("class", "legend card").html(legendGenerator(range))
     
-    if (INTERVAL_TIME) {
-      const interval = setInterval(() => {
-        render({ geojson, date: months[i++] })
-        if (i >= months.length) clearInterval(interval)
-      }, INTERVAL_TIME)
+    if (INTERVAL_TIME) { 
+      const interval = () => render({ geojson, date: months[i++] })
+      // display the controls
+      sidebar.append("div").attr("class", "controls card").html(controlsGenerator(interval, months.length))
     }
     
-    window.addEventListener("resize", () => size(render, { geojson, date: months[i] }))
+    addEventListener("resize", () => size(render, { geojson, date: months[i] }))
   })

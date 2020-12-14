@@ -1,13 +1,20 @@
+:root {
+  --color: #fafafa;
+  --bg: #003545;
+  --space: 1rem;
+}
+
 html {
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
 }
 
 body {
   width: 100%;
   height: 100%;
-  background-color: #fafafa;
-  padding: 1em;
+  background-color: var(--bg);
+  padding: var(--space);
   box-sizing: border-box;
 }
 
@@ -17,49 +24,95 @@ body {
   height: 100%;
 }
 
-.tooltip {
-  opacity: 0;
-  position: absolute;
-  background: #fff;
-  border: 1px solid #eee;
-  padding: 5px;
-  box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.75);
-  border-radius: 5px;
-  transition: opacity 250ms;
-}
-
-.legend {
-  position: absolute;
+.card {
+  background: var(--color);
   padding: 1em;
-  top: 1em;
-  right: 1em;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 25%;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.75);
   box-sizing: border-box;
 }
 
-.legend > * {
-  flex: 0 1 50%;
-  padding: 0 15px;
+.sidebar {
+  position: absolute;
+  top: var(--space);
+  right: var(--space);
+  z-index: 2;
+}
+
+.tooltip {
+  opacity: 0;
+  position: absolute;
+  transition: opacity 250ms;
+  z-index: 2;
+}
+
+.legend {
+  margin-bottom: var(--space);
 }
 
 .legend__range:not(:last-child) {
-  margin-bottom: 0.25em;
-}
-
-.legend__date-month {
-  font-size: 3em;
-  white-space: nowrap;
-  flex: 0 0 400px;
-  text-align: center;
+  margin-bottom: calc(0.25 * var(--space));
 }
 
 .legend__range-square {
-  width: 1em;
-  height: 1em;
-  margin-right: 0.5em;
+  width: var(--space);
+  height: var(--space);
+  margin-right: calc(0.5 * var(--space));
   display: inline-block;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+}
+
+.control__button {
+  padding: calc(0.25 * var(--space)) var(--space);
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.control__button:first-child {
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+}
+
+.control__button:last-child {
+  border-top-right-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
+.control__button-play {
+  border: 0;
+  display: inline-block;
+  pointer-events: none;
+  background: transparent;
+  box-sizing: border-box;
+  width: 0;
+  height: var(--space);
+  border-color: transparent transparent transparent var(--bg);
+  transition: 100ms all ease;
+  border-style: solid;
+  border-width: calc(0.5 * var(--space)) 0 calc(0.5 * var(--space)) var(--space);
+}
+
+.control__button-play:hover {
+  border-color: transparent transparent transparent #404040;
+}
+
+.control__button.paused .control__button-play {
+  border-style: double;
+  border-width: 0px 0 0px var(--space);
+}
+
+.control__button-stop {
+  display: inline-block;
+  pointer-events: none;
+  width: var(--space);
+  height: var(--space);
+  background: var(--bg);
+}
+
+.control__button-stop:hover {
+  background: #404040;
 }
