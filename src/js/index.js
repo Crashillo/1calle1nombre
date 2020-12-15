@@ -6,14 +6,14 @@ import { transition } from "d3-transition"
 import { scaleQuantile } from "d3-scale"
 import { schemeGreens } from "d3-scale-chromatic"
 import { feature } from "topojson-client"
-import { styler, percent, formatDate, parser, Timer } from "./helpers"
-import TOPOJSON_PATH from "url:../static/zamora.topo.json"
-import REPORT_PATH from "url:../static/report.csv"
+import { styler, percent, formatDate, parser, load, parseFeatures } from "./helpers"
+import { ELEMENTS } from "./elements"
+
+import REPORT from "url:../static/report.csv"
 
 // constants
-const INTERVAL_TIME = 200
+const INTERVAL_TIME = 1000
 const DELIMITER = ";"
-const TOPOJSON_PROPERTY = "zamora"
 const projection = geoMercator()
 const range = schemeGreens[5]
 const color = scaleQuantile(range).domain([0, 1])
@@ -22,12 +22,52 @@ const color = scaleQuantile(range).domain([0, 1])
 let width = 0
 let height = 0
 let i = 0
+let elementSelected = 1
+let { prop: topojsonProp } = ELEMENTS[elementSelected]
+let csv = null
 
 // static elements
 const map = select("#map")
 const svg = map.append("svg")
 const g = svg.append("g")
-const tooltip = map.append("div").attr("class", "tooltip card")
+
+const tooltip = map.append("div")
+  .attr("class", "tooltip card")
+
+const loader = map.append("div")
+  .attr("class", "loader__container")
+  .append("div")
+  .attr("class", "loader")
+
+const sidebar = map.append("div")
+  .attr("class", "sidebar")
+
+const legend = sidebar.append("div")
+  .attr("class", "legend card")
+
+const controls = sidebar.append("div")
+  .attr("class", "controls card")
+
+const selector = sidebar
+  .append("div")
+  .attr("class", "selector__container card")
+  .append("select")
+  .attr("class", "selector")
+  .on("change", ({ target: { value }}) => {
+    const ix = ELEMENTS.findIndex(x => x.value === value) || 0
+    const { path, prop } = 
+    topojsonProp = ELEMENTS[ix].prop
+    reload(load(ELEMENTS[ix]))
+  })
+const options = selector.selectAll("option").data(ELEMENTS)
+const optionsEnter = options.enter().append("option")
+options
+  .merge(optionsEnter)
+  .attr("value", x => x.value)
+  .attr("selected", ({ prop }) => prop === topojsonProp || null)
+  .text(x => x.value)
+
+// generators
 const legendGenerator = (ranges) => {
   const formatRange = d => {
     const [start, end] = color.invertExtent(d)
@@ -39,23 +79,34 @@ const legendGenerator = (ranges) => {
 }
 const controlsGenerator = (interval, max) => {
   let timer = null
-  const play = () => { timer = setInterval(() => i < max ? interval() : clearInterval(timer), INTERVAL_TIME) }
+  let btn = null
+  const play = () => { 
+    timer = setInterval(() => {
+      if (i === max) {
+        i = 0;
+        btn.remove("paused");
+        return clearInterval(timer);
+      }
+      
+      return interval()
+    }, INTERVAL_TIME)
+  }
   const pause = () => { clearInterval(timer) }
   const stop = () => { i = 0; clearInterval(timer); interval() }
   const control = value => `<button id="${value}" class="control__button"><span class="control__button-${value}"></span></button>`
 
   document.addEventListener("click", ({ target }) => {
-    const btnPlay = document.querySelector("#play")
+    btn = document.querySelector("#play").classList
 
-    if (target.id === "play" && btnPlay.classList.contains("paused")) {
+    if (target.id === "play" && btn.contains("paused")) {
       pause()
-      btnPlay.classList.remove("paused")
+      btn.remove("paused")
     } else if (target.id === "play") {
       play()
-      btnPlay.classList.add("paused")
+      btn.add("paused")
     } else if (target.id === "stop") {
       stop()
-      btnPlay.classList.remove("paused")
+      btn.remove("paused")
     }
   })
   
@@ -98,50 +149,59 @@ const render = ({ geojson = {}, date }) => {
 
   const text = month
     .merge(monthEnter)
+    .attr("opacity", 0)
     .attr("x", width)
     .attr("fill", "white")
     .attr("font-size", "3em")
-    .text(formatDate(new Date(date), { year: "2-digit", month: "short" }))
+    .text(formatDate(new Date(date), { year: "numeric", month: "long" }))
     
   const { height: h } = text.node().getBoundingClientRect()
   
   text
     .attr("y", height - h)
+    .transition()
+    .duration(INTERVAL_TIME * 0.8)
     .attr("text-anchor", "end")
+    .attr("opacity", 1)
+    
+  text
+    .exit()
+    .remove()
 }
 
-// request data
-Promise.all([fetch(TOPOJSON_PATH).then(r => r.json()), dsv(DELIMITER, REPORT_PATH, parser)])
-  .then(([topojson, csv]) => {
-    const geojson = feature(topojson, topojson.objects[TOPOJSON_PROPERTY])
+// init app
+reload(load(ELEMENTS[elementSelected]), dsv(DELIMITER, REPORT, parser))
 
-    // merge geojson with csv
-    geojson.features = geojson.features.map(f => {
-      const { properties: { nombre: name }} = f
-      const values = csv.reduce((acc, { name: dname, date, result }) => {
-        if (dname === name) {
-          acc[date] = result
-        }
-        
-        return acc
-      }, {})
+async function reload(...promises) {
+  styler(loader, { "opacity": 1 })
+  
+  const [topojson, report] = await Promise.all(promises)
+  
+  if (!csv) csv = report // set the csv after the first request, from now on
+  
+  const data = report ?? csv // the data will be fulfilled only at the first time
+  const geojson = feature(topojson, topojson.objects[topojsonProp])
 
-      return { ...f, properties: { ...f.properties, name, values }}
-    })
+  // merge geojson with csv
+  geojson.features = parseFeatures(geojson.features, data)
 
-    const months = [... new Set(csv.map(({ date }) => date))].sort()
+  const months = [...new Set(data.map(({ date }) => date))].sort()
 
-    // initial call to get sizes
-    size(render, { geojson, date: months[i] })
-    // display the legend and controls
-    const sidebar = map.append("div").attr("class", "sidebar")
-    sidebar.append("div").attr("class", "legend card").html(legendGenerator(range))
-    
-    if (INTERVAL_TIME) { 
-      const interval = () => render({ geojson, date: months[i++] })
-      // display the controls
-      sidebar.append("div").attr("class", "controls card").html(controlsGenerator(interval, months.length))
-    }
-    
-    addEventListener("resize", () => size(render, { geojson, date: months[i] }))
-  })
+  // initial call to get sizes
+  size(render, { geojson, date: months[i] })
+  
+  // hide spinner
+  styler(loader, { "opacity": 0 })
+  
+  if (INTERVAL_TIME) { 
+    const interval = () => render({ geojson, date: months[++i] })
+    // add controls
+    controls.html(controlsGenerator(interval, months.length - 1))
+  }
+  
+  // add legend
+  legend.html(legendGenerator(range))
+  
+  // TODO actualizar func
+  //addEventListener("resize", () => size(render, { geojson, date: months[i] }))
+}

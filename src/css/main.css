@@ -1,3 +1,7 @@
+@import "./legend.css";
+@import "./controls.css";
+@import "./loader.css";
+
 :root {
   --color: #fafafa;
   --bg: #003545;
@@ -37,6 +41,13 @@ body {
   top: var(--space);
   right: var(--space);
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.sidebar > :not(:last-child) {
+  margin-bottom: var(--space);
 }
 
 .tooltip {
@@ -44,75 +55,4 @@ body {
   position: absolute;
   transition: opacity 250ms;
   z-index: 2;
-}
-
-.legend {
-  margin-bottom: var(--space);
-}
-
-.legend__range:not(:last-child) {
-  margin-bottom: calc(0.25 * var(--space));
-}
-
-.legend__range-square {
-  width: var(--space);
-  height: var(--space);
-  margin-right: calc(0.5 * var(--space));
-  display: inline-block;
-}
-
-.controls {
-  display: flex;
-  justify-content: center;
-}
-
-.control__button {
-  padding: calc(0.25 * var(--space)) var(--space);
-  display: inline-flex;
-  cursor: pointer;
-}
-
-.control__button:first-child {
-  border-top-left-radius: inherit;
-  border-bottom-left-radius: inherit;
-}
-
-.control__button:last-child {
-  border-top-right-radius: inherit;
-  border-bottom-right-radius: inherit;
-}
-
-.control__button-play {
-  border: 0;
-  display: inline-block;
-  pointer-events: none;
-  background: transparent;
-  box-sizing: border-box;
-  width: 0;
-  height: var(--space);
-  border-color: transparent transparent transparent var(--bg);
-  transition: 100ms all ease;
-  border-style: solid;
-  border-width: calc(0.5 * var(--space)) 0 calc(0.5 * var(--space)) var(--space);
-}
-
-.control__button-play:hover {
-  border-color: transparent transparent transparent #404040;
-}
-
-.control__button.paused .control__button-play {
-  border-style: double;
-  border-width: 0px 0 0px var(--space);
-}
-
-.control__button-stop {
-  display: inline-block;
-  pointer-events: none;
-  width: var(--space);
-  height: var(--space);
-  background: var(--bg);
-}
-
-.control__button-stop:hover {
-  background: #404040;
 }
