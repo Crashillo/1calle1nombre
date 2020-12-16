@@ -13,51 +13,61 @@ export const ELEMENTS = [
   { 
     "path": CYL,
     "value": "Castilla y León",
-    "prop": "cyl"
+    "prop": "cyl",
+    "code": null 
   },
   {
     "path": AVILA,
     "value": "Ávila",
-    "prop": "avila"
+    "prop": "avila",
+    "code": "05"
   },
   {
     "path": BURGOS,
     "value": "Burgos",
-    "prop": "burgos"
+    "prop": "burgos",
+    "code": "09"
   },
   {
     "path": LEON,
     "value": "León",
-    "prop": "leon"
+    "prop": "leon",
+    "code": "24"
   },
   {
     "path": PALENCIA,
     "value": "Palencia",
-    "prop": "palencia"
+    "prop": "palencia",
+    "code": "34"
   },
   {
     "path": SALAMANCA,
     "value": "Salamanca",
-    "prop": "salamanca"
+    "prop": "salamanca",
+    "code": "37"
   },
   {
     "path": SEGOVIA,
     "value": "Segovia",
-    "prop": "segovia"
+    "prop": "segovia",
+    "code": "40"
   },
   {
     "path": SORIA,
     "value": "Soria",
-    "prop": "soria"
+    "prop": "soria",
+    "code": "42"
   },
   {
     "path": VALLADOLID,
     "value": "Valladolid",
-    "prop": "valladolid"
+    "prop": "valladolid",
+    "code": "47"
   },
   {
     "path": ZAMORA,
     "value": "Zamora",
-    "prop": "zamora"
+    "prop": "zamora",
+    "code": "49"
   }
 ]

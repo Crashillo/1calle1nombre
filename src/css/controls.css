@@ -37,11 +37,6 @@
   border-color: transparent transparent transparent #404040;
 }
 
-.control__button.paused .control__button-play {
-  border-style: double;
-  border-width: 0px 0 0px var(--space);
-}
-
 .control__button-stop {
   display: inline-block;
   pointer-events: none;
