@@ -3,4 +3,6 @@
   position: absolute;
   transition: opacity 250ms;
   z-index: 2;
+  transform: translate(10%, -100%);
+  pointer-events: none;
 }

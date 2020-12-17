@@ -7,7 +7,7 @@ import { transition } from "d3-transition"
 import { scaleQuantile } from "d3-scale"
 import { schemeGreens } from "d3-scale-chromatic"
 import { zoom, zoomIdentity } from "d3-zoom"
-import { feature } from "topojson-client"
+import { feature, mesh } from "topojson-client"
 import { percent, formatDate, parser, parseFeatures } from "./helpers"
 import { ELEMENTS } from "./elements"
 
@@ -17,7 +17,7 @@ import REPORT from "url:../static/report.csv"
 const INTERVAL_TIME = 800
 const DELIMITER = ";"
 const projection = geoMercator()
-const range = schemeGreens[5]
+const range = schemeGreens[9]
 const color = scaleQuantile(range).domain([0, 1])
 const z = zoom().scaleExtent([1, 8])
 
@@ -26,6 +26,7 @@ let currentMonthIx = 0
 let currentFeatureIx = 0
 let geojson = null
 let months = null
+//let arcs = null
 let w = 0
 let h = 0
 let t = null
@@ -77,6 +78,14 @@ sidebar.append("div")
   .attr("class", "control__button")
   .on("click", ({ target }) => {
     if (target.id === "play") {
+      if (t !== null) {
+        t.stop()
+        t = null
+        select(target).classed("pause", true)
+        return
+      }
+      
+      select(target).classed("pause", false)
       if (currentMonthIx === months.length - 1) currentMonthIx = 0
       t = interval(() => {
         currentMonthIx++
@@ -85,7 +94,10 @@ sidebar.append("div")
       }, INTERVAL_TIME)
     } else if (target.id === "stop") {
       currentMonthIx = 0
-      t.stop()
+      if (t !== null) {
+        t.stop()
+        t = null
+      }
       render()
     }
   })
@@ -120,13 +132,17 @@ const render = () => {
   
   const features = geojson.features.filter(filterFeat)
   const featuresIds = features.map(({ properties: { codmun } }) => codmun)
-  const paths = gpath.selectAll("path").data(geojson.features)
-  const pathEnter = paths.enter().append("path")
+  const paths = gpath.selectAll("path.path").data(geojson.features)
+//  const arc = gpath.selectAll("path.arc").data([arcs])
+  const pathEnter = paths.enter().append("path").attr("class", "path")
   const monthEnter = month.enter().append("text")
+//  const arcEnter = arc.enter().append("path").attr("class", "arc")
 
   const [[x0, y0], [x1, y1]] = geoPath(projection).bounds({ ...geojson, features })
   
   z.on("zoom", ({ transform }) => gpath.attr("transform", transform))
+  
+  svg.call(z);
   
   svg
     .transition()
@@ -142,16 +158,11 @@ const render = () => {
   paths
     .merge(pathEnter)
     .on("mouseenter", ({ pageX, pageY, target }, { properties: { name, values } }) => {
-//      select(target)
-//        .raise()
-//        .transition()
-//        .duration(INTERVAL_TIME)
-//        .attr("transform", d => {
-//          const [x, y] = geoPath(projection).centroid(d)
-//          const scale = 3
-//          return `translate(${-x * (scale - 1)} ${-y * (scale - 1)}) scale(${scale})`
-//        })
-//        .attr("stroke", "steelblue")
+      select(target)
+        .transition()
+        .duration(0.5 * INTERVAL_TIME)
+//        .attr("stroke", "#31112c")
+        .attr("fill", "#7d0633")
 
       tooltip
         .style("opacity", 1)
@@ -160,28 +171,41 @@ const render = () => {
         .html(`${name}: <em>${percent(values[months[currentMonthIx]])}</em>`)
     })
     .on("mouseleave", ({ target }) => {
-//      select(target)
-//        .transition()
-//        .duration(INTERVAL_TIME)
-//        .attr("transform", null)
-
+      select(target)
+        .transition()
+        .duration(0.5 * INTERVAL_TIME)
+        .attr("fill", ({ properties: { values } = {}} = {}) => color(values[months[currentMonthIx]]))
+      
       tooltip.style("opacity", 0)
     })
     .attr("d", d => geoPath(projection)(d))
+    .style("pointer-events", ({ properties: { codmun, values } = {}} = {}) => featuresIds.includes(codmun) ? "auto" : "none")
+    .attr("stroke", "#fafafa")
+    .attr("stroke-width", 0.25)
+    .attr("stroke-opacity", ({ properties: { codmun, values } = {}} = {}) => featuresIds.includes(codmun) ? 1 : 0.25)
     .transition()
     .duration(INTERVAL_TIME)
     .attr("fill", ({ properties: { codmun, values } = {}} = {}) => featuresIds.includes(codmun) ? color(values[months[currentMonthIx]]) : "black")
-    .attr("stroke", ({ properties: { codmun, values } = {}} = {}) => featuresIds.includes(codmun) ? "white" : "steelblue")
-    .attr("stroke-width", 0.2)
 
   paths
     .exit()
     .remove()
 
+//  arc
+//    .merge(arcEnter)
+//    .transition()
+//    .duration(INTERVAL_TIME)
+//    .attr("fill", "none")
+//    .attr("stroke", "#fafafa")
+//    .attr("stroke-width", 0.5)
+//    .attr("stroke-opacity", 0.5)
+//    .attr("stroke-linejoin", "round")
+//    .attr("d", geoPath(projection)(arcs));
+
   const text = month
     .merge(monthEnter)
-    .attr("x", w)
-    .attr("y", h)
+    .attr("x", w * 0.9)
+    .attr("y", h * 0.9)
     .attr("dy", "-1em")
     .attr("text-anchor", "end")
     .attr("dominant-baseline", "hanging")
@@ -207,6 +231,7 @@ const resize = () => {
 const reload = async (...promises) => {
   const [topojson, report] = await Promise.all(promises)
   geojson = feature(topojson, topojson.objects[ELEMENTS[currentFeatureIx].prop])
+////  arcs = mesh(topojson, topojson.objects[ELEMENTS[currentFeatureIx].prop], (a,b) => a !== b)
 
   // merge geojson with csv
   geojson.features = parseFeatures(geojson.features, report)
