@@ -6,19 +6,20 @@ import { interval } from "d3-timer"
 import { transition } from "d3-transition"
 import { scaleQuantile } from "d3-scale"
 import { schemeGreens } from "d3-scale-chromatic"
-import { interpolate } from "d3-interpolate"
+import { zoom, zoomIdentity } from "d3-zoom"
 import { feature } from "topojson-client"
-import { styler, percent, formatDate, parser, parseFeatures } from "./helpers"
+import { percent, formatDate, parser, parseFeatures } from "./helpers"
 import { ELEMENTS } from "./elements"
 
 import REPORT from "url:../static/report.csv"
 
 // constants
-const INTERVAL_TIME = 1000
+const INTERVAL_TIME = 800
 const DELIMITER = ";"
 const projection = geoMercator()
 const range = schemeGreens[5]
 const color = scaleQuantile(range).domain([0, 1])
+const z = zoom().scaleExtent([1, 8])
 
 // variables
 let currentMonthIx = 0
@@ -32,7 +33,8 @@ let t = null
 // static elements
 const map = select("#map")
 const svg = map.append("svg")
-const g = svg.append("g")
+const gpath = svg.append("g")
+const gmonth = svg.append("g")
 
 const tooltip = map.append("div")
   .attr("class", "tooltip card")
@@ -75,6 +77,7 @@ sidebar.append("div")
   .attr("class", "control__button")
   .on("click", ({ target }) => {
     if (target.id === "play") {
+      if (currentMonthIx === months.length - 1) currentMonthIx = 0
       t = interval(() => {
         currentMonthIx++
         render()
@@ -91,9 +94,8 @@ sidebar.append("div")
 
 sidebar
   .append("div")
-  .attr("class", "selector__container card")
+  .attr("class", "selector card")
   .append("select")
-  .attr("class", "selector")
   .on("change", ({ target: { value }}) => {
     const ix = ELEMENTS.findIndex(x => x.code === value) 
     currentFeatureIx = ix < 0 ? 0 : ix
@@ -109,7 +111,7 @@ sidebar
 
 // map functions
 const render = () => {
-  const month = g.selectAll("text").data(months.filter((_, ix) => currentMonthIx === ix))
+  const month = gmonth.selectAll("text").data(months.filter((_, ix) => currentMonthIx === ix))
   const filterFeat = ({ properties: { codmun }}) => {
     const { code } = ELEMENTS[currentFeatureIx]
     if (!code) return true
@@ -117,12 +119,25 @@ const render = () => {
   }
   
   const features = geojson.features.filter(filterFeat)
-  const paths = g.selectAll("path").data(features)
+  const featuresIds = features.map(({ properties: { codmun } }) => codmun)
+  const paths = gpath.selectAll("path").data(geojson.features)
   const pathEnter = paths.enter().append("path")
   const monthEnter = month.enter().append("text")
+
+  const [[x0, y0], [x1, y1]] = geoPath(projection).bounds({ ...geojson, features })
   
-  // fake zoom
-  projection.fitSize([w,h], { ...geojson, features })
+  z.on("zoom", ({ transform }) => gpath.attr("transform", transform))
+  
+  svg
+    .transition()
+    .duration(INTERVAL_TIME)
+    .call(
+      z.transform,
+      zoomIdentity
+        .translate(w / 2, h / 2)
+        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / w, (y1 - y0) / h)))
+        .translate(-(x0 + x1) / 2, -(y0 + y1) / 2)
+    );
 
   paths
     .merge(pathEnter)
@@ -138,8 +153,11 @@ const render = () => {
 //        })
 //        .attr("stroke", "steelblue")
 
-      styler(tooltip, { opacity: 1, top: `${pageY}px`, left: `${pageX}px` })
-      tooltip.html(`${name}: <em>${percent(values[months[currentMonthIx]])}</em>`)
+      tooltip
+        .style("opacity", 1)
+        .style("top", `${pageY}px`)
+        .style("left", `${pageX}px`)
+        .html(`${name}: <em>${percent(values[months[currentMonthIx]])}</em>`)
     })
     .on("mouseleave", ({ target }) => {
 //      select(target)
@@ -147,11 +165,14 @@ const render = () => {
 //        .duration(INTERVAL_TIME)
 //        .attr("transform", null)
 
-      styler(tooltip, { opacity: 0 })
+      tooltip.style("opacity", 0)
     })
     .attr("d", d => geoPath(projection)(d))
-    .attr("fill", ({ properties: { values } = {}} = {}) => color(values[months[currentMonthIx]]))
-    .attr("stroke","white")
+    .transition()
+    .duration(INTERVAL_TIME)
+    .attr("fill", ({ properties: { codmun, values } = {}} = {}) => featuresIds.includes(codmun) ? color(values[months[currentMonthIx]]) : "black")
+    .attr("stroke", ({ properties: { codmun, values } = {}} = {}) => featuresIds.includes(codmun) ? "white" : "steelblue")
+    .attr("stroke-width", 0.2)
 
   paths
     .exit()
@@ -179,6 +200,7 @@ const render = () => {
 const resize = () => {
   ({ width: w, height: h } = map.node().getBoundingClientRect())
   svg.attr("viewBox", [0, 0, w, h])
+  projection.fitSize([w, h], geojson)
   render()
 }
 
