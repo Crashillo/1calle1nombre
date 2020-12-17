@@ -4,9 +4,12 @@
 }
 
 .control__button {
-  padding: calc(0.25 * var(--space)) var(--space);
-  display: inline-flex;
+  display: grid;
+  align-items: center;
+  justify-items: center;
   cursor: pointer;
+  width: calc(2rem + var(--space));
+  height: calc(2rem + var(--space));
 }
 
 .control__button:first-child {

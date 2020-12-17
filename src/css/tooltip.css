@@ -1,0 +1,6 @@
+.tooltip {
+  opacity: 0;
+  position: absolute;
+  transition: opacity 250ms;
+  z-index: 2;
+}

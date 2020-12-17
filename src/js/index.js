@@ -8,7 +8,7 @@ import { scaleQuantile } from "d3-scale"
 import { schemeGreens } from "d3-scale-chromatic"
 import { interpolate } from "d3-interpolate"
 import { feature } from "topojson-client"
-import { styler, percent, formatDate, parser, load, parseFeatures } from "./helpers"
+import { styler, percent, formatDate, parser, parseFeatures } from "./helpers"
 import { ELEMENTS } from "./elements"
 
 import REPORT from "url:../static/report.csv"
@@ -27,6 +27,7 @@ let geojson = null
 let months = null
 let w = 0
 let h = 0
+let t = null
 
 // static elements
 const map = select("#map")
@@ -73,7 +74,6 @@ sidebar.append("div")
   .attr("id", d => d)
   .attr("class", "control__button")
   .on("click", ({ target }) => {
-    let t = null
     if (target.id === "play") {
       t = interval(() => {
         currentMonthIx++
@@ -83,6 +83,7 @@ sidebar.append("div")
     } else if (target.id === "stop") {
       currentMonthIx = 0
       t.stop()
+      render()
     }
   })
   .append("span")
@@ -151,7 +152,7 @@ const render = () => {
     .attr("d", d => geoPath(projection)(d))
     .attr("fill", ({ properties: { values } = {}} = {}) => color(values[months[currentMonthIx]]))
     .attr("stroke","white")
-    
+
   paths
     .exit()
     .remove()
@@ -159,16 +160,17 @@ const render = () => {
   const text = month
     .merge(monthEnter)
     .attr("x", w)
+    .attr("y", h)
+    .attr("dy", "-1em")
+    .attr("text-anchor", "end")
+    .attr("dominant-baseline", "hanging")
     .attr("fill", "white")
     .attr("font-size", "3em")
-    .text(formatDate(new Date(months[currentMonthIx]), { year: "numeric", month: "long" }))
-    
-  const { height } = text.node().getBoundingClientRect()
-  
-  text
-    .attr("y", h - height)
-    .attr("text-anchor", "end")
-    
+    .text(() => {
+      const date = new Date(months[currentMonthIx])
+      return `${formatDate(date, { month: "long" })} '${formatDate(date, { year: "2-digit" })}`
+    })
+
   text
     .exit()
     .remove()
@@ -198,8 +200,6 @@ const reload = async (...promises) => {
 }
 
 // init app
-reload(load(ELEMENTS[currentFeatureIx]), dsv(DELIMITER, REPORT, parser))
+reload(fetch(ELEMENTS[currentFeatureIx].path).then(r => r.json()), dsv(DELIMITER, REPORT, parser))
 
-addEventListener("resize", () => {
-  resize()
-})
+addEventListener("resize", resize)

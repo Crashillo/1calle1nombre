@@ -1,58 +1,17 @@
-@import "./legend.css";
-@import "./controls.css";
-@import "./loader.css";
-
 :root {
   --color: #fafafa;
   --bg: #003545;
-  --space: 1rem;
+  --space: 0.5rem;
 }
 
-html {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+@media (min-width: 768px) {
+  :root {
+    --space: 1rem;
+  }
 }
 
-body {
-  width: 100%;
-  height: 100%;
-  background-color: var(--bg);
-  padding: var(--space);
-  box-sizing: border-box;
-}
-
-
-#map {
-  width: 100%;
-  height: 100%;
-}
-
-.card {
-  background: var(--color);
-  padding: 1em;
-  border-radius: 5px;
-  box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.75);
-  box-sizing: border-box;
-}
-
-.sidebar {
-  position: absolute;
-  top: var(--space);
-  right: var(--space);
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.sidebar > :not(:last-child) {
-  margin-bottom: var(--space);
-}
-
-.tooltip {
-  opacity: 0;
-  position: absolute;
-  transition: opacity 250ms;
-  z-index: 2;
-}
+@import "./layout.css";
+@import "./tooltip.css";
+@import "./legend.css";
+@import "./controls.css";
+@import "./loader.css";
