@@ -1,6 +1,6 @@
 {
   "name": "1calle1nombre",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Visto #1calle1nombre",
   "scripts": {
     "start": "parcel serve ./src/index.html --open",
