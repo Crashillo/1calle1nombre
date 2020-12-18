@@ -8,32 +8,33 @@ import { scaleQuantile } from "d3-scale";
 import { schemeGreens } from "d3-scale-chromatic";
 import { zoom, zoomIdentity } from "d3-zoom";
 import { feature } from "topojson-client";
-import { percent, formatDate } from "./helpers";
+import { percent, formatDate, get } from "./helpers";
 import { ELEMENTS } from "./elements";
 
 // constants
-const INTERVAL_TIME = 800;
+const INTERVAL_TIME = 2000;
 const projection = geoMercator();
 const range = schemeGreens[9];
 const color = scaleQuantile(range).domain([0, 1]);
 const z = zoom().scaleExtent([1, 8]);
+const getCodmun = get('properties', 'codmun')
+const getValues = get('properties', 'values')
+const getNombre = get('properties', 'nombre')
 
 // variables
 let currentMonthIx = 0;
 let currentFeatureIx = 0;
 let geojson = null;
 let months = null;
-//let arcs = null
 let w = 0;
 let h = 0;
-let t = null;
+let tick = null;
 
 // static elements
 const map = select("#map");
 const svg = map.append("svg");
 const gpath = svg.append("g");
 const gmonth = svg.append("g");
-
 const tooltip = map.append("div").attr("class", "tooltip card");
 
 const loader = map
@@ -70,42 +71,42 @@ sidebar
   .data(["stop", "play"])
   .enter()
   .append("button")
-  .attr("id", (d) => d)
+  .attr("id", d => d)
   .attr("class", "control__button")
   .on("click", ({ target }) => {
     if (target.id === "play") {
-      if (t !== null) {
-        t.stop();
-        t = null;
+      if (tick !== null) {
+        tick.stop();
+        tick = null;
         select(target).classed("pause", true);
         return;
       }
 
       select(target).classed("pause", false);
       if (currentMonthIx === months.length - 1) currentMonthIx = 0;
-      t = interval(() => {
+      tick = interval(() => {
         currentMonthIx++;
         render();
-        if (currentMonthIx === months.length - 1) t.stop();
+        if (currentMonthIx === months.length - 1) tick.stop();
       }, INTERVAL_TIME);
     } else if (target.id === "stop") {
       currentMonthIx = 0;
-      if (t !== null) {
-        t.stop();
-        t = null;
+      if (tick !== null) {
+        tick.stop();
+        tick = null;
       }
       render();
     }
   })
   .append("span")
-  .attr("class", (d) => `control__button-${d}`);
+  .attr("class", d => `control__button-${d}`);
 
 sidebar
   .append("div")
   .attr("class", "selector card")
   .append("select")
   .on("change", ({ target: { value } }) => {
-    const ix = ELEMENTS.findIndex((x) => x.code === value);
+    const ix = ELEMENTS.findIndex(x => x.code === value);
     currentFeatureIx = ix < 0 ? 0 : ix;
     render();
   })
@@ -113,31 +114,42 @@ sidebar
   .data(ELEMENTS)
   .enter()
   .append("option")
-  .attr("value", (x) => x.code)
+  .attr("value", x => x.code)
   .attr(
     "selected",
     ({ prop }) => prop === ELEMENTS[currentFeatureIx].prop || null
   )
-  .text((x) => x.value);
+  .text(x => x.value);
 
 // map functions
 const render = () => {
-  const month = gmonth
+  const t = svg.transition().duration(INTERVAL_TIME * 0.9)
+
+  gmonth
     .selectAll("text")
-    .data(months.filter((_, ix) => currentMonthIx === ix));
-  const filterFeat = ({ properties: { codmun } }) => {
+    .data(months.filter((_, ix) => currentMonthIx === ix), x => x)
+    .join(
+      enter => enter
+        .append("text")
+        .attr("x", w * 2)
+        .attr("y", h * 0.9)
+        .attr("dy", "-1em")
+        .attr("text-anchor", "end")
+        .attr("dominant-baseline", "hanging")
+        .attr("fill", "white")
+        .attr("font-size", "3em")
+        .text(d => `${formatDate(new Date(d), { month: "long" })} '${formatDate(new Date(d), { year: "2-digit" })}`)
+        .call(enter => enter.transition(t).attr("x", w * 0.9)),
+      update => update,
+      exit => exit.call(exit => exit.transition(t).style("opacity", 0).attr("x", w * 0.5).remove())
+    );
+
+  const features = geojson.features.filter(d => {
     const { code } = ELEMENTS[currentFeatureIx];
     if (!code) return true;
-    return code === codmun.substring(0, 2);
-  };
-
-  const features = geojson.features.filter(filterFeat);
-  const featuresIds = features.map(({ properties: { codmun } }) => codmun);
-  const paths = gpath.selectAll("path.path").data(geojson.features);
-  //  const arc = gpath.selectAll("path.arc").data([arcs])
-  const pathEnter = paths.enter().append("path").attr("class", "path");
-  const monthEnter = month.enter().append("text");
-  //  const arcEnter = arc.enter().append("path").attr("class", "arc")
+    return code === getCodmun(d).substring(0, 2);
+  });
+  const featuresIds = features.map(getCodmun);
 
   const [[x0, y0], [x1, y1]] = geoPath(projection).bounds({
     ...geojson,
@@ -145,12 +157,10 @@ const render = () => {
   });
 
   z.on("zoom", ({ transform }) => gpath.attr("transform", transform));
-
   svg.call(z);
 
   svg
-    .transition()
-    .duration(INTERVAL_TIME)
+    .transition(t)
     .call(
       z.transform,
       zoomIdentity
@@ -159,54 +169,42 @@ const render = () => {
         .translate(-(x0 + x1) / 2, -(y0 + y1) / 2)
     );
 
-  paths
-    .merge(pathEnter)
-    .on(
-      "mouseenter",
-      ({ pageX, pageY, target }, { properties: { nombre, values } }) => {
-        select(target)
-          .transition()
-          .duration(0.5 * INTERVAL_TIME)
-          //        .attr("stroke", "#31112c")
-          .attr("fill", "#7d0633");
+  gpath
+    .selectAll("path")
+    .data(geojson.features, getCodmun)
+    .join(
+      enter => enter
+        .append("path")
+        .attr("d", d => geoPath(projection)(d))
+        .attr("stroke", "#fafafa")
+        .attr("stroke-width", 0.25)
+        .on("mouseenter", ({ pageX, pageY, target }, d) => {
+          const t = svg.transition().duration(INTERVAL_TIME / 4)
+          select(target).transition(t).attr("fill", "#7d0633")
 
-        tooltip
-          .style("opacity", 1)
-          .style("top", `${pageY}px`)
-          .style("left", `${pageX}px`)
-          .html(
-            `${nombre}: <em>${percent(values[months[currentMonthIx]])}</em>`
-          );
-      }
-    )
-    .on("mouseleave", ({ target }) => {
-      select(target)
-        .transition()
-        .duration(0.5 * INTERVAL_TIME)
-        .attr("fill", ({ properties: { values } = {} } = {}) =>
-          color(values[months[currentMonthIx]])
-        );
+          tooltip
+            .style("opacity", 1)
+            .style("top", `${pageY}px`)
+            .style("left", `${pageX}px`)
+            .html(
+              `${getNombre(d)}: <em>${percent(getValues(d)[months[currentMonthIx]])}</em>`
+            );
+        })
+        .on("mouseleave", ({ target }) => {
+          const t = svg.transition().duration(INTERVAL_TIME / 4)
+          select(target)
+            .transition(t)
+            .attr("fill", d => color(getValues(d)[months[currentMonthIx]]));
 
-      tooltip.style("opacity", 0);
-    })
-    .attr("d", (d) => geoPath(projection)(d))
-    .style("pointer-events", ({ properties: { codmun, values } = {} } = {}) =>
-      featuresIds.includes(codmun) ? "auto" : "none"
+          tooltip.style("opacity", 0);
+        }),
+      update => update,
+      exit => exit.remove()
     )
-    .attr("stroke", "#fafafa")
-    .attr("stroke-width", 0.25)
-    .attr("stroke-opacity", ({ properties: { codmun, values } = {} } = {}) =>
-      featuresIds.includes(codmun) ? 1 : 0.25
-    )
-    .transition()
-    .duration(INTERVAL_TIME)
-    .attr("fill", ({ properties: { codmun, values } = {} } = {}) =>
-      featuresIds.includes(codmun)
-        ? color(values[months[currentMonthIx]])
-        : "black"
-    );
-
-  paths.exit().remove();
+    .transition(t)
+    .attr("fill", d => featuresIds.includes(getCodmun(d)) ? color(getValues(d)[months[currentMonthIx]]) : "black")
+    .attr("stroke-opacity", d => featuresIds.includes(getCodmun(d)) ? 1 : 0.25)
+    .style("pointer-events", d => featuresIds.includes(getCodmun(d)) ? "auto" : "none")
 
   //  arc
   //    .merge(arcEnter)
@@ -219,23 +217,6 @@ const render = () => {
   //    .attr("stroke-linejoin", "round")
   //    .attr("d", geoPath(projection)(arcs));
 
-  const text = month
-    .merge(monthEnter)
-    .attr("x", w * 0.9)
-    .attr("y", h * 0.9)
-    .attr("dy", "-1em")
-    .attr("text-anchor", "end")
-    .attr("dominant-baseline", "hanging")
-    .attr("fill", "white")
-    .attr("font-size", "3em")
-    .text(() => {
-      const date = new Date(months[currentMonthIx]);
-      return `${formatDate(date, { month: "long" })} '${formatDate(date, {
-        year: "2-digit",
-      })}`;
-    });
-
-  text.exit().remove();
 };
 
 const resize = () => {
