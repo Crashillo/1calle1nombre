@@ -7,15 +7,12 @@ import { transition } from "d3-transition"
 import { scaleQuantile } from "d3-scale"
 import { schemeGreens } from "d3-scale-chromatic"
 import { zoom, zoomIdentity } from "d3-zoom"
-import { feature, mesh } from "topojson-client"
-import { percent, formatDate, parser, parseFeatures } from "./helpers"
+import { feature } from "topojson-client"
+import { percent, formatDate } from "./helpers"
 import { ELEMENTS } from "./elements"
-
-import REPORT from "url:../static/report.csv"
 
 // constants
 const INTERVAL_TIME = 800
-const DELIMITER = ";"
 const projection = geoMercator()
 const range = schemeGreens[9]
 const color = scaleQuantile(range).domain([0, 1])
@@ -157,7 +154,7 @@ const render = () => {
 
   paths
     .merge(pathEnter)
-    .on("mouseenter", ({ pageX, pageY, target }, { properties: { name, values } }) => {
+    .on("mouseenter", ({ pageX, pageY, target }, { properties: { nombre, values } }) => {
       select(target)
         .transition()
         .duration(0.5 * INTERVAL_TIME)
@@ -168,7 +165,7 @@ const render = () => {
         .style("opacity", 1)
         .style("top", `${pageY}px`)
         .style("left", `${pageX}px`)
-        .html(`${name}: <em>${percent(values[months[currentMonthIx]])}</em>`)
+        .html(`${nombre}: <em>${percent(values[months[currentMonthIx]])}</em>`)
     })
     .on("mouseleave", ({ target }) => {
       select(target)
@@ -229,15 +226,12 @@ const resize = () => {
 }
 
 const reload = async (...promises) => {
-  const [topojson, report] = await Promise.all(promises)
+  const [topojson] = await Promise.all(promises)
   geojson = feature(topojson, topojson.objects[ELEMENTS[currentFeatureIx].prop])
-////  arcs = mesh(topojson, topojson.objects[ELEMENTS[currentFeatureIx].prop], (a,b) => a !== b)
-
-  // merge geojson with csv
-  geojson.features = parseFeatures(geojson.features, report)
+  //arcs = mesh(topojson, topojson.objects[ELEMENTS[currentFeatureIx].prop], (a,b) => a !== b)
   
   // set the differents month-year tuples
-  months = [...new Set(report.map(({ date }) => date))].sort()
+  months = [...new Set(geojson.features.map(({ properties: { values }}) => Object.keys(values)).flat())]
   
   // fit & render map
   resize()
@@ -247,6 +241,6 @@ const reload = async (...promises) => {
 }
 
 // init app
-reload(fetch(ELEMENTS[currentFeatureIx].path).then(r => r.json()), dsv(DELIMITER, REPORT, parser))
+reload(fetch(ELEMENTS[currentFeatureIx].path).then(r => r.json()))
 
 addEventListener("resize", resize)
