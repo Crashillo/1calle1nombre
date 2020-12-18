@@ -27,7 +27,7 @@
 .loader:before,
 .loader:after {
   position: absolute;
-  content: '';
+  content: "";
 }
 
 .loader:before {
