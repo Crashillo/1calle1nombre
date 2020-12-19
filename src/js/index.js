@@ -9,7 +9,7 @@ import { schemeGreens } from "d3-scale-chromatic";
 import { zoom, zoomIdentity } from "d3-zoom";
 import { feature } from "topojson-client";
 import { percent, formatDate, get } from "./helpers";
-import { ELEMENTS } from "./elements";
+import { ELEMENTS, PROP, URL } from "./elements";
 
 // constants
 const INTERVAL_TIME = 2000;
@@ -50,8 +50,7 @@ const legendRanges = sidebar
   .attr("class", "legend card")
   .selectAll(".legend__range")
   .data(range)
-  .enter()
-  .append("div")
+  .join("div")
   .attr("class", "legend__range");
 
 legendRanges
@@ -69,8 +68,7 @@ sidebar
   .attr("class", "controls card")
   .selectAll("button")
   .data(["stop", "play"])
-  .enter()
-  .append("button")
+  .join("button")
   .attr("id", d => d)
   .attr("class", "control__button")
   .on("click", ({ target }) => {
@@ -112,12 +110,11 @@ sidebar
   })
   .selectAll("option")
   .data(ELEMENTS)
-  .enter()
-  .append("option")
-  .attr("value", x => x.code)
+  .join("option")
+  .attr("value", ({ code }) => code)
   .attr(
     "selected",
-    ({ prop }) => prop === ELEMENTS[currentFeatureIx].prop || null
+    ({ code }) => code === ELEMENTS[currentFeatureIx].code || null
   )
   .text(x => x.value);
 
@@ -170,18 +167,24 @@ const render = () => {
     );
 
   gpath
-    .selectAll("path")
+    .selectAll("path.path")
     .data(geojson.features, getCodmun)
     .join(
       enter => enter
         .append("path")
+        .attr("class", "path")
         .attr("d", d => geoPath(projection)(d))
-        .attr("stroke", "#fafafa")
-        .attr("stroke-width", 0.25)
+        .attr("stroke-alignment", "inner")
+        .attr("stroke-width", 0.5)
         .on("mouseenter", ({ pageX, pageY, target }, d) => {
           const t = svg.transition().duration(INTERVAL_TIME / 4)
-          select(target).transition(t).attr("fill", "#7d0633")
-
+          select(target)
+            .raise()
+            .transition(t)
+            .attr("fill", "#7d0633")
+            .attr("stroke-width", 3)
+            .attr("stroke", "#310234")
+            
           tooltip
             .style("opacity", 1)
             .style("top", `${pageY}px`)
@@ -194,7 +197,9 @@ const render = () => {
           const t = svg.transition().duration(INTERVAL_TIME / 4)
           select(target)
             .transition(t)
-            .attr("fill", d => color(getValues(d)[months[currentMonthIx]]));
+            .attr("fill", d => color(getValues(d)[months[currentMonthIx]]))
+            .attr("stroke", d => color(getValues(d)[months[currentMonthIx]]))
+            .attr("stroke-width", 0.5)
 
           tooltip.style("opacity", 0);
         }),
@@ -204,19 +209,8 @@ const render = () => {
     .transition(t)
     .attr("fill", d => featuresIds.includes(getCodmun(d)) ? color(getValues(d)[months[currentMonthIx]]) : "black")
     .attr("stroke-opacity", d => featuresIds.includes(getCodmun(d)) ? 1 : 0.25)
+    .attr("stroke", d => featuresIds.includes(getCodmun(d)) ? color(getValues(d)[months[currentMonthIx]]) : "#fafafa")
     .style("pointer-events", d => featuresIds.includes(getCodmun(d)) ? "auto" : "none")
-
-  //  arc
-  //    .merge(arcEnter)
-  //    .transition()
-  //    .duration(INTERVAL_TIME)
-  //    .attr("fill", "none")
-  //    .attr("stroke", "#fafafa")
-  //    .attr("stroke-width", 0.5)
-  //    .attr("stroke-opacity", 0.5)
-  //    .attr("stroke-linejoin", "round")
-  //    .attr("d", geoPath(projection)(arcs));
-
 };
 
 const resize = () => {
@@ -230,9 +224,8 @@ const reload = async (...promises) => {
   const [topojson] = await Promise.all(promises);
   geojson = feature(
     topojson,
-    topojson.objects[ELEMENTS[currentFeatureIx].prop]
+    topojson.objects[PROP]
   );
-  //arcs = mesh(topojson, topojson.objects[ELEMENTS[currentFeatureIx].prop], (a,b) => a !== b)
 
   // set the differents month-year tuples
   months = [
@@ -251,6 +244,6 @@ const reload = async (...promises) => {
 };
 
 // init app
-reload(fetch(ELEMENTS[currentFeatureIx].path).then((r) => r.json()));
+reload(fetch(URL).then((r) => r.json()));
 
 addEventListener("resize", resize);
