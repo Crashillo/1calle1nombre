@@ -42,7 +42,7 @@
 
 .control__button.pause .control__button-play {
   border-style: double;
-  border-width: 0px 0 0px var(--space);
+  border-width: 0 0 0 var(--space);
 }
 
 .control__button-stop {

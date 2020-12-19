@@ -59,6 +59,6 @@ body {
   background: var(--color);
   padding: calc(0.5 * var(--space));
   border-radius: 5px;
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.75);
   box-sizing: border-box;
 }

@@ -1,4 +1,4 @@
-import CYL from "url:../static/cyl.topo.json";
+import CYL from "url:../static/cyl.topo.json"
 
 export const URL = CYL
 export const PROP = "cyl"
@@ -43,4 +43,4 @@ export const ELEMENTS = [
     value: "Zamora",
     code: "49",
   },
-];
+]
