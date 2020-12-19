@@ -72,15 +72,16 @@ sidebar
   .attr("id", d => d)
   .attr("class", "control__button")
   .on("click", ({ target }) => {
+    select("#play").classed("pause", false);
+    
     if (target.id === "play") {
       if (tick !== null) {
         tick.stop();
         tick = null;
-        select(target).classed("pause", true);
         return;
       }
 
-      select(target).classed("pause", false);
+      select(target).classed("pause", true);
       if (currentMonthIx === months.length - 1) currentMonthIx = 0;
       tick = interval(() => {
         currentMonthIx++;
@@ -180,9 +181,9 @@ const render = () => {
           const t = svg.transition().duration(INTERVAL_TIME / 4)
           select(target)
             .raise()
+            .attr("stroke-width", 2)
             .transition(t)
             .attr("fill", "#7d0633")
-            .attr("stroke-width", 3)
             .attr("stroke", "#310234")
             
           tooltip
@@ -196,10 +197,10 @@ const render = () => {
         .on("mouseleave", ({ target }) => {
           const t = svg.transition().duration(INTERVAL_TIME / 4)
           select(target)
+            .attr("stroke-width", 0.5)
             .transition(t)
             .attr("fill", d => color(getValues(d)[months[currentMonthIx]]))
             .attr("stroke", d => color(getValues(d)[months[currentMonthIx]]))
-            .attr("stroke-width", 0.5)
 
           tooltip.style("opacity", 0);
         }),
