@@ -2,7 +2,8 @@ import { geoMercator, geoPath } from "d3-geo"
 import { select } from "d3-selection"
 import { interval } from "d3-timer"
 import { transition } from "d3-transition"
-import { scaleQuantile } from "d3-scale"
+import { scaleQuantile, scalePoint } from "d3-scale"
+import { drag } from "d3-drag"
 import { schemeGreens } from "d3-scale-chromatic"
 import { zoom, zoomIdentity } from "d3-zoom"
 import { feature } from "topojson-client"
@@ -14,6 +15,7 @@ const INTERVAL_TIME = 1000
 const projection = geoMercator()
 const range = schemeGreens[9]
 const color = scaleQuantile(range).domain([0, 1])
+const mmm = scalePoint()
 const z = zoom().scaleExtent([1, 8])
 const getId = get("properties", FEATURE_ID)
 const getValues = get("properties", FEATURE_VALUES)
@@ -33,6 +35,7 @@ const map = select("#map")
 const svg = map.append("svg")
 const gpath = svg.append("g")
 const gmonth = svg.append("g")
+const slider = svg.append("g").style("opacity", 0)
 const tooltip = map.append("div").attr("class", "tooltip card")
 
 const loader = map
@@ -54,7 +57,7 @@ const legendRanges = sidebar
 legendRanges
   .append("i")
   .attr("class", "legend__range-square")
-  .style("background-color", (d) => d)
+  .style("background-color", d => d)
 
 legendRanges.append("span").text((d) => {
   const [start, end] = color.invertExtent(d)
@@ -116,6 +119,40 @@ sidebar
     ({ code }) => code === ELEMENTS[currentFeatureIx].code || null
   )
   .text(x => x.value)
+  
+const lineSlider = slider
+  .append("line")
+  .attr("x1", 0)
+  .attr("stroke", "white")
+  .attr("stroke-width", 15)
+  .attr("stroke-linecap", "round")
+  
+const ghostLineSlider = slider
+  .append("line")
+  .attr("x1", 0)
+  .attr("stroke", "transparent")
+  .attr("stroke-width", 300)
+  .attr("stroke-linecap", "round")
+  .style("cursor", "crosshair")
+  .call(drag()
+    .on("start.interrupt", () => slider.interrupt())
+    .on("start drag", ({ x }) => {
+      const [min, max] = mmm.range()
+      const ix = Math.floor(x / mmm.step())
+
+      circle.attr("cx", x)
+
+      if (ix !== currentMonthIx) {
+        currentMonthIx = ix
+        render()
+      }
+  }))
+  
+const circle = slider
+  .append("circle")
+  .attr("r", 15)
+  .attr("fill", "#fafafa")
+  .attr("stroke", "#310234")
 
 // map functions
 const render = () => {
@@ -128,14 +165,14 @@ const render = () => {
       enter => enter
         .append("text")
         .attr("x", w * 2)
-        .attr("y", h * 0.9)
+        .attr("y", w < 640 ? h * 0.8 : h * 0.9)
         .attr("dy", "-1em")
         .attr("text-anchor", "end")
         .attr("dominant-baseline", "hanging")
         .attr("fill", "white")
-        .attr("font-size", "3em")
+        .attr("font-size", "2em")
         .text(d => `${formatDate(new Date(d), { month: "long" })} '${formatDate(new Date(d), { year: "2-digit" })}`)
-        .call(enter => enter.transition(t).attr("x", w * 0.9)),
+        .call(enter => enter.transition(t).attr("x", w * 0.95)),
       update => update,
       exit => exit.call(exit => exit.transition(t).style("opacity", 0).attr("x", w * 0.5).remove())
     )
@@ -227,6 +264,13 @@ const resize = () => {
   ({ width: w, height: h } = map.node().getBoundingClientRect())
   svg.attr("viewBox", [0, 0, w, h])
   projection.fitSize([w, h], geojson)
+  
+  const [from, to] = [w < 640 ? w * 0.05 : w * 0.6, w * 0.95]
+  mmm.range([from, to])
+  lineSlider.attr("x2", to - from)
+  ghostLineSlider.attr("x2", to - from)
+  slider.attr("transform", `translate(${from} ${w < 640 ? h * 0.85 : h * 0.95})`).style("opacity", 1)
+    
   render()
 }
 
@@ -245,6 +289,8 @@ const reload = async (...promises) => {
         .flat()
     ),
   ]
+
+  mmm.domain(months)
 
   // fit & render map
   resize()
