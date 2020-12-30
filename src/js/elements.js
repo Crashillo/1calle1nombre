@@ -1,7 +1,10 @@
 import CYL from "url:../static/cyl.topo.json"
 
-export const URL = CYL
-export const PROP = "cyl"
+export const TOPOJSON_URL = CYL
+export const TOPOJSON_PROP = "cyl"
+export const FEATURE_ID = "codmun"
+export const FEATURE_VALUES = "values"
+export const FEATURE_DESC = "nombre"
 export const ELEMENTS = [
   {
     value: "Castilla y León",

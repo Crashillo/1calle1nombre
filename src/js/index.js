@@ -7,7 +7,7 @@ import { schemeGreens } from "d3-scale-chromatic"
 import { zoom, zoomIdentity } from "d3-zoom"
 import { feature } from "topojson-client"
 import { percent, formatDate, get } from "./helpers"
-import { ELEMENTS, PROP, URL } from "./elements"
+import { ELEMENTS, TOPOJSON_PROP, TOPOJSON_URL, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./elements"
 
 // constants
 const INTERVAL_TIME = 1000
@@ -15,9 +15,9 @@ const projection = geoMercator()
 const range = schemeGreens[9]
 const color = scaleQuantile(range).domain([0, 1])
 const z = zoom().scaleExtent([1, 8])
-const getCodmun = get("properties", "codmun")
-const getValues = get("properties", "values")
-const getNombre = get("properties", "nombre")
+const getId = get("properties", FEATURE_ID)
+const getValues = get("properties", FEATURE_VALUES)
+const getDesc = get("properties", FEATURE_DESC)
 
 // variables
 let currentMonthIx = 0
@@ -143,7 +143,7 @@ const render = () => {
   const isFeatureActive = d => {
     const { code } = ELEMENTS[currentFeatureIx]
     if (!code) return true
-    return code === getCodmun(d).substring(0, 2)
+    return code === getId(d).substring(0, 2)
   }
 
   const [[x0, y0], [x1, y1]] = geoPath(projection).bounds({
@@ -166,7 +166,7 @@ const render = () => {
 
   gpath
     .selectAll("path")
-    .data(geojson.features.map(d => ({ ...d, activated: isFeatureActive(d) })), getCodmun)
+    .data(geojson.features.map(d => ({ ...d, activated: isFeatureActive(d) })), getId)
     .join(
       enter => enter
         .append("path")
@@ -191,7 +191,7 @@ const render = () => {
             .style("top", `${pageY}px`)
             .style("left", `${pageX}px`)
             .html(
-              `${getNombre(d)}: <em>${percent(getValues(d)[months[currentMonthIx]])}</em>`
+              `${getDesc(d)}: <em>${percent(getValues(d)[months[currentMonthIx]])}</em>`
             )
         })
         .on("mouseleave", ({ target }) => {
@@ -234,7 +234,7 @@ const reload = async (...promises) => {
   const [topojson] = await Promise.all(promises)
   geojson = feature(
     topojson,
-    topojson.objects[PROP]
+    topojson.objects[TOPOJSON_PROP]
   )
 
   // set the differents month-year tuples
@@ -254,6 +254,6 @@ const reload = async (...promises) => {
 }
 
 // init app
-reload(fetch(URL).then((r) => r.json()))
+reload(fetch(TOPOJSON_URL).then((r) => r.json()))
 
 addEventListener("resize", resize)
