@@ -14,8 +14,8 @@ import { ELEMENTS, TOPOJSON_PROP, TOPOJSON_URL, FEATURE_ID, FEATURE_VALUES, FEAT
 const INTERVAL_TIME = 1000
 const projection = geoMercator()
 const range = schemeGreens[9]
-const color = scaleQuantile(range).domain([0, 1])
-const mmm = scalePoint()
+const colorScale = scaleQuantile(range).domain([0, 1])
+const timeScale = scalePoint()
 const z = zoom().scaleExtent([1, 8])
 const getId = get("properties", FEATURE_ID)
 const getValues = get("properties", FEATURE_VALUES)
@@ -60,7 +60,7 @@ legendRanges
   .style("background-color", d => d)
 
 legendRanges.append("span").text((d) => {
-  const [start, end] = color.invertExtent(d)
+  const [start, end] = colorScale.invertExtent(d)
   return `${percent(start)} - ${percent(end)}`
 })
 
@@ -123,40 +123,43 @@ sidebar
 const lineSlider = slider
   .append("line")
   .attr("x1", 0)
-  .attr("stroke", "white")
-  .attr("stroke-width", 15)
+  .attr("stroke", "#310234")
+  .attr("stroke-width", 10)
   .attr("stroke-linecap", "round")
   
 const ghostLineSlider = slider
   .append("line")
   .attr("x1", 0)
   .attr("stroke", "transparent")
-  .attr("stroke-width", 300)
+  .attr("stroke-width", 100)
   .attr("stroke-linecap", "round")
   .style("cursor", "crosshair")
+  .style("pointer-events", "stroke")
   .call(drag()
     .on("start.interrupt", () => slider.interrupt())
     .on("start drag", ({ x }) => {
-      const [min, max] = mmm.range()
-      const ix = Math.floor(x / mmm.step())
-
-      circle.attr("cx", x)
+      const ix = Math.max(0, Math.min(Math.floor(x / timeScale.step()), months.length - 1))
 
       if (ix !== currentMonthIx) {
         currentMonthIx = ix
         render()
       }
-  }))
+    }))
   
 const circle = slider
   .append("circle")
-  .attr("r", 15)
+  .attr("r", 10)
   .attr("fill", "#fafafa")
   .attr("stroke", "#310234")
+  .attr("stroke-width", 2)
 
 // map functions
 const render = () => {
   const t = svg.transition().duration(INTERVAL_TIME * 0.9)
+
+  circle
+    .transition(t)
+    .attr("cx", currentMonthIx * timeScale.step())
 
   gmonth
     .selectAll("text")
@@ -210,9 +213,9 @@ const render = () => {
         .attr("d", d => geoPath(projection)(d))
         .attr("stroke-alignment", "inner")
         .attr("stroke-width", 0.5)
-        .attr("fill", d => color(getValues(d)[months[currentMonthIx]]))
+        .attr("fill", d => colorScale(getValues(d)[months[currentMonthIx]]))
         .attr("stroke-opacity", 1)
-        .attr("stroke", d => color(getValues(d)[months[currentMonthIx]]))
+        .attr("stroke", d => colorScale(getValues(d)[months[currentMonthIx]]))
         .style("pointer-events", "auto")
         .on("mouseenter", ({ pageX, pageY, target }, d) => {
           const t = svg.transition().duration(INTERVAL_TIME / 4)
@@ -236,8 +239,8 @@ const render = () => {
           select(target)
             .attr("stroke-width", 0.5)
             .transition(t)
-            .attr("fill", d => color(getValues(d)[months[currentMonthIx]]))
-            .attr("stroke", d => color(getValues(d)[months[currentMonthIx]]))
+            .attr("fill", d => colorScale(getValues(d)[months[currentMonthIx]]))
+            .attr("stroke", d => colorScale(getValues(d)[months[currentMonthIx]]))
 
           tooltip.style("opacity", 0)
         }),
@@ -251,9 +254,9 @@ const render = () => {
         return update
           .filter(({ activated }) => !!activated)
           .call(update => update.transition(t)
-            .attr("fill", d => color(getValues(d)[months[currentMonthIx]]))
+            .attr("fill", d => colorScale(getValues(d)[months[currentMonthIx]]))
             .attr("stroke-opacity", 1)
-            .attr("stroke", d => color(getValues(d)[months[currentMonthIx]]))
+            .attr("stroke", d => colorScale(getValues(d)[months[currentMonthIx]]))
             .style("pointer-events", "auto"))
       },
       exit => exit.remove()
@@ -266,7 +269,7 @@ const resize = () => {
   projection.fitSize([w, h], geojson)
   
   const [from, to] = [w < 640 ? w * 0.05 : w * 0.6, w * 0.95]
-  mmm.range([from, to])
+  timeScale.range([from, to])
   lineSlider.attr("x2", to - from)
   ghostLineSlider.attr("x2", to - from)
   slider.attr("transform", `translate(${from} ${w < 640 ? h * 0.85 : h * 0.95})`).style("opacity", 1)
@@ -290,7 +293,7 @@ const reload = async (...promises) => {
     ),
   ]
 
-  mmm.domain(months)
+  timeScale.domain(months)
 
   // fit & render map
   resize()
