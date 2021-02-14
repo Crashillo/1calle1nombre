@@ -8,12 +8,12 @@ import { schemeGreens } from "d3-scale-chromatic"
 import { zoom, zoomIdentity } from "d3-zoom"
 import { feature } from "topojson-client"
 import { percent, formatDate, get } from "./helpers"
-import { ELEMENTS, TOPOJSON_PROP, TOPOJSON_URL, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./elements"
+import { ELEMENTS, URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
 
 // constants
 const INTERVAL_TIME = 1000
 const projection = geoMercator()
-const range = schemeGreens[9]
+const range = schemeGreens[5]
 const colorScale = scaleQuantile(range).domain([0, 1])
 const timeScale = scalePoint()
 const z = zoom().scaleExtent([1, 8])
@@ -119,7 +119,24 @@ sidebar
     ({ code }) => code === ELEMENTS[currentFeatureIx].code || null
   )
   .text(x => x.value)
-  
+
+// TODO: testing
+if (false) {
+  sidebar
+    .append("div")
+    .attr("class", "selector card")
+    .append("select")
+    .on("change", ({ target: { value } }) => {
+      const { url, prop } = URLS.find(x => x.code === value)
+      reload(fetch(url).then(r => r.json()), prop)
+    })
+    .selectAll("option")
+    .data(URLS)
+    .join("option")
+    .attr("value", ({ code }) => code)
+    .text(x => x.code)
+}
+
 const lineSlider = slider
   .append("line")
   .attr("x1", 0)
@@ -183,7 +200,7 @@ const render = () => {
   const isFeatureActive = d => {
     const { code } = ELEMENTS[currentFeatureIx]
     if (!code) return true
-    return code === getId(d).substring(0, 2)
+    return code === getId(d)?.substring(0, 2)
   }
 
   const [[x0, y0], [x1, y1]] = geoPath(projection).bounds({
@@ -223,7 +240,7 @@ const render = () => {
             .raise()
             .attr("stroke-width", 2)
             .transition(t)
-            .attr("fill", "#7d0633")
+            .attr("fill", "#ffcaba")
             .attr("stroke", "#310234")
             
           tooltip
@@ -267,21 +284,23 @@ const resize = () => {
   ({ width: w, height: h } = map.node().getBoundingClientRect())
   svg.attr("viewBox", [0, 0, w, h])
   projection.fitSize([w, h], geojson)
-  
+
   const [from, to] = [w < 640 ? w * 0.05 : w * 0.6, w * 0.95]
   timeScale.range([from, to])
   lineSlider.attr("x2", to - from)
   ghostLineSlider.attr("x2", to - from)
   slider.attr("transform", `translate(${from} ${w < 640 ? h * 0.85 : h * 0.95})`).style("opacity", 1)
-    
+
   render()
 }
 
-const reload = async (...promises) => {
-  const [topojson] = await Promise.all(promises)
+const reload = async (promise, prop) => {
+  loader.style("opacity", 1)
+  
+  const topojson = await promise
   geojson = feature(
     topojson,
-    topojson.objects[TOPOJSON_PROP]
+    topojson.objects[prop]
   )
 
   // set the differents month-year tuples
@@ -303,6 +322,7 @@ const reload = async (...promises) => {
 }
 
 // init app
-reload(fetch(TOPOJSON_URL).then((r) => r.json()))
+const { url, prop } = URLS[5] // CYL
+reload(fetch(url).then(r => r.json()), prop)
 
 addEventListener("resize", resize)

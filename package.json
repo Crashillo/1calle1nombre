@@ -5,10 +5,10 @@
   "scripts": {
     "start": "parcel serve './src/**/*.html' --open",
     "prebuild": "rm -rf ./dist/*",
-    "build": "parcel build ./src/index.html --public-url . && npm run deploy",
+    "build": "parcel build ./src/index.html --public-url .",
     "lint": "eslint 'src/**/*.js' || stylelint 'src/**/*.css'",
     "lint:fix": "eslint 'src/**/*.js' --fix || stylelint 'src/**/*.css' --fix",
-    "deploy": "gh-pages -d dist -r git@github.com:Crashillo/1calle1nombre.git"
+    "deploy": "npm run build && gh-pages -d dist -r git@github.com:Crashillo/1calle1nombre.git"
   },
   "repository": {
     "type": "git",
