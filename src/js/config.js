@@ -42,49 +42,256 @@ export const URLS = [
     { url: MC, code: "ES-MC", prop: "MC" }
   ]
 ]
+
 export const ELEMENTS = [
   {
-    value: "Castilla y León",
-    code: null,
+    value: "Araba/Álava",
+    group: "ES-PV",
+    code: "01"
+  },
+  {
+    value: "Albacete",
+    group: "ES-CM",
+    code: "02"
+  },
+  {
+    value: "Alacant/Alicante",
+    group: "ES-VC",
+    code: "03"
+  },
+  {
+    value: "Almería",
+    group: "ES-AN",
+    code: "04"
   },
   {
     value: "Ávila",
-    code: "05",
+    group: "ES-CL",
+    code: "05"
+  },
+  {
+    value: "Badajoz",
+    group: "ES-EX",
+    code: "06"
+  },
+  {
+    value: "Illes Balears",
+    group: "ES-IB",
+    code: "07"
+  },
+  {
+    value: "Barcelona",
+    group: "ES-CT",
+    code: "08"
   },
   {
     value: "Burgos",
-    code: "09",
+    group: "ES-CL",
+    code: "09"
+  },
+  {
+    value: "Cáceres",
+    group: "ES-EX",
+    code: "10"
+  },
+  {
+    value: "Cádiz",
+    group: "ES-AN",
+    code: "11"
+  },
+  {
+    value: "Castelló/Castellón",
+    group: "ES-VC",
+    code: "12"
+  },
+  {
+    value: "Ciudad Real",
+    group: "ES-CM",
+    code: "13"
+  },
+  {
+    value: "Córdoba",
+    group: "ES-AN",
+    code: "14"
+  },
+  {
+    value: "A Coruña",
+    group: "ES-GA",
+    code: "15"
+  },
+  {
+    value: "Cuenca",
+    group: "ES-CM",
+    code: "16"
+  },
+  {
+    value: "Girona",
+    group: "ES-CT",
+    code: "17"
+  },
+  {
+    value: "Granada",
+    group: "ES-AN",
+    code: "18"
+  },
+  {
+    value: "Guadalajara",
+    group: "ES-CM",
+    code: "19"
+  },
+  {
+    value: "Gipuzkoa",
+    group: "ES-PV",
+    code: "20"
+  },
+  {
+    value: "Huelva",
+    group: "ES-AN",
+    code: "21"
+  },
+  {
+    value: "Huesca",
+    group: "ES-AR",
+    code: "22"
+  },
+  {
+    value: "Jaén",
+    group: "ES-AN",
+    code: "23"
   },
   {
     value: "León",
-    code: "24",
+    group: "ES-CL",
+    code: "24"
   },
   {
-    value: "Asturias",
-    code: "33",
+    value: "Lleida",
+    group: "ES-CT",
+    code: "25"
+  },
+  {
+    value: "La Rioja",
+    group: "ES-RI",
+    code: "26"
+  },
+  {
+    value: "Lugo",
+    group: "ES-GA",
+    code: "27"
+  },
+  {
+    value: "Comunidad de Madrid",
+    group: "ES-MD",
+    code: "28"
+  },
+  {
+    value: "Málaga",
+    group: "ES-AN",
+    code: "29"
+  },
+  {
+    value: "Región de Murcia",
+    group: "ES-MC",
+    code: "30"
+  },
+  {
+    value: "Navarra - Nafarroa",
+    group: "ES-NC",
+    code: "31"
+  },
+  {
+    value: "Ourense",
+    group: "ES-GA",
+    code: "32"
+  },
+  {
+    value: "Asturias/Asturies",
+    group: "ES-AS",
+    code: "33"
   },
   {
     value: "Palencia",
-    code: "34",
+    group: "ES-CL",
+    code: "34"
+  },
+  {
+    value: "Las Palmas",
+    group: "ES-CN",
+    code: "35"
+  },
+  {
+    value: "Pontevedra",
+    group: "ES-GA",
+    code: "36"
   },
   {
     value: "Salamanca",
-    code: "37",
+    group: "ES-CL",
+    code: "37"
+  },
+  {
+    value: "Santa Cruz de Tenerife",
+    group: "ES-CN",
+    code: "38"
+  },
+  {
+    value: "Cantabria",
+    group: "ES-CB",
+    code: "39"
   },
   {
     value: "Segovia",
-    code: "40",
+    group: "ES-CL",
+    code: "40"
+  },
+  {
+    value: "Sevilla",
+    group: "ES-AN",
+    code: "41"
   },
   {
     value: "Soria",
-    code: "42",
+    group: "ES-CL",
+    code: "42"
+  },
+  {
+    value: "Tarragona",
+    group: "ES-CT",
+    code: "43"
+  },
+  {
+    value: "Teruel",
+    group: "ES-AR",
+    code: "44"
+  },
+  {
+    value: "Toledo",
+    group: "ES-CM",
+    code: "45"
+  },
+  {
+    value: "València/Valencia",
+    group: "ES-VC",
+    code: "46"
   },
   {
     value: "Valladolid",
-    code: "47",
+    group: "ES-CL",
+    code: "47"
+  },
+  {
+    value: "Bizkaia",
+    group: "ES-PV",
+    code: "48"
   },
   {
     value: "Zamora",
-    code: "49",
+    group: "ES-CL",
+    code: "49"
   },
+  {
+    value: "Zaragoza",
+    group: "ES-AR",
+    code: "50"
+  }
 ]

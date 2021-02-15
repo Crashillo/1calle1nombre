@@ -1,4 +1,4 @@
-import { geoMercator, geoPath } from "d3-geo"
+import { geoPath } from "d3-geo"
 import { select } from "d3-selection"
 import { interval } from "d3-timer"
 import { transition } from "d3-transition"
@@ -6,13 +6,14 @@ import { scaleQuantile, scalePoint } from "d3-scale"
 import { drag } from "d3-drag"
 import { schemeGreens } from "d3-scale-chromatic"
 import { zoom, zoomIdentity } from "d3-zoom"
+import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature } from "topojson-client"
 import { percent, formatDate, get } from "./helpers"
 import { ELEMENTS, URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
 
 // constants
 const INTERVAL_TIME = 1000
-const projection = geoMercator()
+const projection = geoConicConformalSpain()
 const range = schemeGreens[5]
 const colorScale = scaleQuantile(range).domain([0, 1])
 const timeScale = scalePoint()
@@ -24,7 +25,9 @@ const getDesc = get("properties", FEATURE_DESC)
 // variables
 let currentMonthIx = 0
 let currentFeatureIx = 0
+let currentGroup = null
 let geojson = null
+let _geojson = null
 let months = null
 let w = 0
 let h = 0
@@ -32,7 +35,21 @@ let tick = null
 
 // static elements
 const map = select("#map")
+  .on("click", ({ target }) => {
+    if (!map.selectAll("path").nodes().includes(target)) {
+      // reset selections
+      currentFeatureIx = 0
+      currentGroup = null
+      
+      geojson = _geojson
+      
+      renderHall()
+      //render()
+    }
+  })
+  
 const svg = map.append("svg")
+const ghall = svg.append("g")
 const gpath = svg.append("g")
 const gmonth = svg.append("g")
 const slider = svg.append("g").style("opacity", 0)
@@ -111,7 +128,7 @@ sidebar
     render()
   })
   .selectAll("option")
-  .data(ELEMENTS)
+  .data(ELEMENTS.filter(({ group }) => !!currentGroup ? group === currentGroup : true))
   .join("option")
   .attr("value", ({ code }) => code)
   .attr(
@@ -119,21 +136,6 @@ sidebar
     ({ code }) => code === ELEMENTS[currentFeatureIx].code || null
   )
   .text(x => x.value)
-
-sidebar
-  .append("div")
-  .attr("class", "selector card")
-  .append("select")
-  .on("change", ({ target: { value } }) => {
-    // search in 2nd array
-    const { url, prop } = URLS[1].find(x => x.code === value)
-    reload(fetch(url).then(r => r.json()), prop)
-  })
-  .selectAll("option")
-  .data(URLS)
-  .join("option")
-  .attr("value", ({ code }) => code)
-  .text(x => x.code)
 
 const lineSlider = slider
   .append("line")
@@ -281,18 +283,12 @@ const render = () => {
 const renderHall = () => {
   const t = svg.transition().duration(INTERVAL_TIME * 0.9)
 
-  const isFeatureActive = d => {
-    const { code } = ELEMENTS[currentFeatureIx]
-    if (!code) return true
-    return code === getId(d)?.substring(0, 2)
-  }
-
   const [[x0, y0], [x1, y1]] = geoPath(projection).bounds({
     ...geojson,
-    features: geojson.features.filter(isFeatureActive),
+    features: geojson.features.filter(d => !!currentGroup ? getId(d) === currentGroup : true),
   })
 
-  z.on("zoom", ({ transform }) => gpath.attr("transform", transform))
+  z.on("zoom", ({ transform }) => ghall.attr("transform", transform))
   svg.call(z)
 
   svg
@@ -305,9 +301,9 @@ const renderHall = () => {
         .translate(-(x0 + x1) / 2, -(y0 + y1) / 2)
     )
 
-  gpath
+  ghall
     .selectAll("path")
-    .data(geojson.features.map(d => ({ ...d, activated: isFeatureActive(d) })), getId)
+    .data(geojson.features, getId)
     .join(
       enter => enter
         .append("path")
@@ -319,10 +315,13 @@ const renderHall = () => {
         .attr("cursor", "pointer")
         .on("click", (_, d) => {
           // search in 2nd array
-          const { url, prop } = URLS[1].find(x => x.code === getId(d))
-          reload(fetch(url).then(r => r.json()), prop)
+          const { url, prop, code } = URLS[1].find(x => x.code === getId(d))
+          currentGroup = code
+          renderHall()
+          //reload(fetch(url).then(r => r.json()), prop)
         })
         ,
+      update => update,
       exit => exit.remove()
     )
 }
@@ -377,6 +376,7 @@ fetch(url)
       topojson,
       topojson.objects[prop]
     )
+    _geojson = geojson
     
     months = ["2021-01-01"]
     timeScale.domain(months)

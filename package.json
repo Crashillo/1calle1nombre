@@ -18,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "d3": "^6.3.1",
+    "d3-composite-projections": "^1.4.0",
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
