@@ -26,7 +26,7 @@ export default class Visor {
     const [featureProp] = Object.keys(features.objects)
     const [linesProp] = Object.keys(lines.objects)
     this.baseData = feature(features, features.objects[featureProp])
-    this.baseLines = mesh(lines, lines.objects[linesProp])
+    this.baseLines = mesh(lines, lines.objects[linesProp], (a, b) => a !== b)
     
     this.renderBase()
     
@@ -87,14 +87,14 @@ export default class Visor {
     this.timeScale.domain(this.currentMonths)
     this.renderFeature()
     
-    if (this.sidebar.nodes().length === 1) {
+    if (this.sidebar.selectChildren().nodes().length === 1) {
       this.controls = new Controls(this.sidebar, {
         play: () => this.onPlay(),
         stop: () => this.onStop()
       })
     }
     
-    if (this.gSlider.nodes().length) {    
+    if (!this.gSlider.selectChildren().nodes().length) {
       this.slider = new Slider(this.gSlider, {
         drag: e => this.onDrag(e),
         timeScale: this.timeScale,
@@ -111,8 +111,10 @@ export default class Visor {
 
     const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
       ...this.baseData,
-      features: this.baseData.features.filter(d => this.currentGroup ? getId(d) === this.currentGroup : true),
+      features: this.baseData.features.filter(d => this.currentGroup && getId(d) === this.currentGroup),
     })
+    
+    this.currentSize = [[x0, y0], [x1, y1]]
 
     this.svg.call(this.z)
     this.svg
@@ -147,7 +149,7 @@ export default class Visor {
       //~ .attr("fill", "none")
       //~ .attr("pointer-events", "none")
       //~ .attr("stroke", "var(--bg)")
-      //~ .attr("stroke-width", 0.1)
+      //~ .attr("stroke-width", 0.25)
       //~ .attr("stroke-linejoin", "round")
   }
   
@@ -232,7 +234,7 @@ export default class Visor {
               .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]]))
               .style("pointer-events", "auto"))
         },
-        exit => exit.remove()
+        exit => exit.call(exit => exit.transition(t).attr("fill", "black").remove())
       )
   }
   
@@ -240,7 +242,6 @@ export default class Visor {
     if (!this.map.selectAll("path").nodes().includes(target)) {
       // reset selections
       this.currentGroup = null
-      
       this.renderBase()
     }
   }
@@ -254,40 +255,30 @@ export default class Visor {
     const { url, code } = URLS[1].find(x => x.code === getId(feature))
     this.currentGroup = code
 
-    // size for the children
-    this.currentSize = geoPath(this.projection).bounds({
-      ...this.baseData,
-      features: this.baseData.features.filter(d => getId(d) === code),
-    })
-
     this.renderBase()
-
-    // wait for the zoom
-    setTimeout(() => {
-      this.reload(url)
-    }, this.INTERVAL_TIME * 0.9)
+    this.reload(url)
   }
   
   onBaseMouseenter({ target }) {
-    const t = this.svg.transition().duration(this.INTERVAL_TIME / 4)
     select(target)
-      .transition(t)
+      .transition()
+      .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#0dc5c1")
   }
   
   onBaseMouseleave({ target }) {
-    const t = this.svg.transition().duration(this.INTERVAL_TIME / 4)
     select(target)
-      .transition(t)
+      .transition()
+      .duration(this.INTERVAL_TIME / 4)
       .attr("fill", null)
   }
   
   onFeatureMouseenter({ pageX, pageY, target }, { feature, months }) {
-    const t = this.svg.transition().duration(this.INTERVAL_TIME / 4)
     select(target)
       .raise()
       .attr("stroke-width", 5)
-      .transition(t)
+      .transition()
+      .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#ffcaba")
       .attr("stroke", "#310234")
       
@@ -301,11 +292,11 @@ export default class Visor {
   }
   
   onFeatureMouseleave({ target }, { months }) {
-    const t = this.svg.transition().duration(this.INTERVAL_TIME / 4)
     select(target)
       .attr("stroke-width", 0)
       .attr("stroke", null)
-      .transition(t)
+      .transition()
+      .duration(this.INTERVAL_TIME / 4)
       .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]]))
 
     this.tooltip.style("opacity", 0)
@@ -314,7 +305,7 @@ export default class Visor {
   onResize() {
     this.resize()
     this.renderBase()
-    this.slider.resize(this.width, this.height)
+    this.slider?.resize(this.width, this.height)
   }
   
   onPlay() {
