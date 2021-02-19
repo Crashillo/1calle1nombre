@@ -8,7 +8,7 @@ import { zoom, zoomIdentity } from "d3-zoom"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
 import { percent, formatDate, getProp } from "./helpers"
-import { ELEMENTS, URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
+import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
 import Legend from "./legend"
 import Controls from "./controls"
 import Slider from "./slider"
@@ -19,8 +19,8 @@ const getValues = getProp("properties", FEATURE_VALUES)
 const getDesc = getProp("properties", FEATURE_DESC)
 
 export default class Visor {
-  constructor({ features, lines, ...DEFAULTS }) {
-    this.build(DEFAULTS)
+  constructor({ features, lines }) {
+    this.build()
     this.resize()
     
     const [featureProp] = Object.keys(features.objects)
@@ -35,10 +35,10 @@ export default class Visor {
       colorScale: this.colorScale
     })
     
-    addEventListener('resize', () => this.onResize())
+    addEventListener("resize", () => this.onResize())
   }
   
-  build(values) {
+  build() {
     // static elements
     this.map = select("#map").on("click", e => this.onMapClick(e))
     this.svg = this.map.append("svg")
@@ -143,14 +143,14 @@ export default class Visor {
       )
       
     //~ this.gBase
-      //~ .append("path")
-      //~ .datum(this.baseLines)
-      //~ .attr("d", geoPath(this.projection))
-      //~ .attr("fill", "none")
-      //~ .attr("pointer-events", "none")
-      //~ .attr("stroke", "var(--bg)")
-      //~ .attr("stroke-width", 0.25)
-      //~ .attr("stroke-linejoin", "round")
+    //~ .append("path")
+    //~ .datum(this.baseLines)
+    //~ .attr("d", geoPath(this.projection))
+    //~ .attr("fill", "none")
+    //~ .attr("pointer-events", "none")
+    //~ .attr("stroke", "var(--bg)")
+    //~ .attr("stroke-width", 0.25)
+    //~ .attr("stroke-linejoin", "round")
   }
   
   renderFeature() {
@@ -184,11 +184,11 @@ export default class Visor {
 
     // TODO: esto puede sobrar si no filtramos por provincias
     //~ const isFeatureActive = d => {
-      //~ const { code } = ELEMENTS[currentFeatureIx]
-      //~ // TODO: ojo!
-      //~ return true
-      //~ if (!code || !currentGroup) return true
-      //~ return code === getId(d)?.substring(0, 2)
+    //~ const { code } = ELEMENTS[currentFeatureIx]
+    //~ // TODO: ojo!
+    //~ return true
+    //~ if (!code || !currentGroup) return true
+    //~ return code === getId(d)?.substring(0, 2)
     //~ }
     
     const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
@@ -287,7 +287,7 @@ export default class Visor {
       .style("top", `${pageY}px`)
       .style("left", `${pageX}px`)
       .html(
-        `${getDesc(feature)}: <em>${percent(getValues(feature)[this.currentMonths[this.currentMonthIx]])}</em>`
+        `${getDesc(feature)}: <em>${percent(getValues(feature)[months[this.currentMonthIx]])}</em>`
       )
   }
   
@@ -297,7 +297,7 @@ export default class Visor {
       .attr("stroke", null)
       .transition()
       .duration(this.INTERVAL_TIME / 4)
-      .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]]))
+      .attr("fill", d => this.colorScale(getValues(d)[months[this.currentMonthIx]]))
 
     this.tooltip.style("opacity", 0)
   }
