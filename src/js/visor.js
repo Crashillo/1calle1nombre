@@ -41,11 +41,10 @@ export default class Visor {
   build() {
     // static elements
     this.map = select("#map").on("click", e => this.onMapClick(e))
-    this.svg = this.map.append("svg")
+    this.svg = this.map.append("svg").attr("preserveAspectRatio", "xMinYMin meet")
     this.g = this.svg.append("g")
     this.gBase = this.g.append("g")
     this.gFeatures = this.g.append("g")
-    this.gMonth = this.svg.append("g")
     this.gSlider = this.svg.append("g")
     this.tooltip = this.map.append("div").attr("class", "tooltip card")
     this.sidebar = this.map.append("div").attr("class", "sidebar")
@@ -83,9 +82,6 @@ export default class Visor {
           .flat()
       ),
     ]
-
-    this.timeScale.domain(this.currentMonths)
-    this.renderFeature()
     
     if (this.sidebar.selectChildren().nodes().length === 1) {
       this.controls = new Controls(this.sidebar, {
@@ -98,16 +94,18 @@ export default class Visor {
       this.slider = new Slider(this.gSlider, {
         drag: e => this.onDrag(e),
         timeScale: this.timeScale,
-        height: this.height,
-        width: this.width
+        container: this.svg
       })
     }
+    
+    this.timeScale.domain(this.currentMonths)
+    this.renderFeature()
   }
   
   renderBase() {
     this.projection.fitSize([this.width, this.height], this.baseData)
     
-    const t = this.svg.transition().duration(this.INTERVAL_TIME * 0.9)
+    const t = transition().duration(this.INTERVAL_TIME * 0.9)
 
     const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
       ...this.baseData,
@@ -155,32 +153,8 @@ export default class Visor {
   
   renderFeature() {
     this.projection.fitExtent(this.currentSize, this.currentFeature)
-
-    const t = this.svg.transition().duration(this.INTERVAL_TIME * 0.9)
-
-    this.gSlider
-      .select("circle")
-      .transition(t)
-      .attr("cx", this.currentMonthIx * this.timeScale.step())
-
-    this.gMonth
-      .selectAll("text")
-      .data(this.currentMonths.filter((_, ix) => this.currentMonthIx === ix), x => x)
-      .join(
-        enter => enter
-          .append("text")
-          .attr("x", this.width * 2)
-          .attr("y", this.width < 640 ? this.height * 0.8 : this.height * 0.9)
-          .attr("dy", "-1em")
-          .attr("text-anchor", "end")
-          .attr("dominant-baseline", "hanging")
-          .attr("fill", "white")
-          .attr("font-size", "2em")
-          .text(d => `${formatDate(new Date(d), { month: "long" })} '${formatDate(new Date(d), { year: "2-digit" })}`)
-          .call(enter => enter.transition(t).attr("x", this.width * 0.95)),
-        update => update,
-        exit => exit.call(exit => exit.transition(t).style("opacity", 0).attr("x", this.width * 0.5).remove())
-      )
+    // update slider, if any   
+    this.slider?.render({ month: this.currentMonthIx, months: this.currentMonths })
 
     // TODO: esto puede sobrar si no filtramos por provincias
     //~ const isFeatureActive = d => {
@@ -191,6 +165,7 @@ export default class Visor {
     //~ return code === getId(d)?.substring(0, 2)
     //~ }
     
+    const t = transition().duration(this.INTERVAL_TIME * 0.9)
     const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
       ...this.currentFeature,
       features: this.currentFeature.features,
@@ -243,6 +218,7 @@ export default class Visor {
       // reset selections
       this.currentGroup = null
       this.renderBase()
+      this.renderFeature()
     }
   }
   
@@ -305,7 +281,9 @@ export default class Visor {
   onResize() {
     this.resize()
     this.renderBase()
-    this.slider?.resize(this.width, this.height)
+    if (this.currentFeature) {
+      this.renderFeature()
+    }
   }
   
   onPlay() {

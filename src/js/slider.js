@@ -1,20 +1,24 @@
 import { drag } from "d3-drag"
+import { transition } from "d3-transition"
+import { formatDate } from "./helpers"
 
 export default class Slider {
-  constructor(node, { drag, timeScale, height, width }) {
-    this.render(node)
-    
+  constructor(node, { drag, timeScale, container }) {
+    this.build(node)
+
     this.timeScale = timeScale
-    this.height = height
-    this.width = width
     
-    this.resize(this.width, this.height)
+    this.container = container
+    this.resize()
     
     this.onDrag = drag
+    
+    addEventListener("resize", () => this.resize())
   }
   
-  render(node) {
+  build(node) {
     this.node = node
+    
     this.lineSlider = node
       .append("line")
       .attr("x1", 0)
@@ -32,9 +36,7 @@ export default class Slider {
       .style("pointer-events", "stroke")
       .call(drag()
         .on("start.interrupt", () => node.interrupt())
-        .on("start drag", ({ x }) => {
-          return this.onDrag(x)
-        }))
+        .on("start drag", ({ x }) => this.onDrag(x)))
       
     this.circle = node
       .append("circle")
@@ -45,13 +47,42 @@ export default class Slider {
       .style("pointer-events", "none")
   }
   
-  resize(w, h) {
+  render({ month, months }) {
+    const t1 = transition().duration(500)
+    const t2 = transition().duration(2000)
+    
+    this.circle
+      .transition(t1)
+      .attr("cx", month * this.timeScale.step())
+      
+    this.node
+      .selectAll("text")
+      .data(months.filter((_, ix) => month === ix), x => x)
+      .join(
+        enter => enter
+          .append("text")
+          .attr("dy", "-1em")
+          .attr("text-anchor", "end")
+          .attr("fill", "white")
+          .attr("font-size", "2em")
+          .text(d => `${formatDate(new Date(d), { month: "long" })} '${formatDate(new Date(d), { year: "2-digit" })}`)
+          .call(enter => enter
+            .attr("x", 2 * this.width)
+            .transition(t2)
+            .attr("x", this.width)),
+        update => update,
+        exit => exit.call(exit => exit.transition(t2).style("opacity", 0).attr("x", this.width * 0.5).remove())
+      )
+  }
+  
+  resize() {
+    const [,,w, h] = this.container.attr("viewBox").split(",")
     const [from, to] = [w < 640 ? w * 0.05 : w * 0.7, w * 0.95]
     
+    this.width = to -from
     this.timeScale.range([from, to])
-    this.lineSlider.attr("x2", to - from)
-    this.ghostLineSlider.attr("x2", to - from)
-    
+    this.lineSlider.attr("x2", this.width)
+    this.ghostLineSlider.attr("x2", this.width)
     this.node.attr("transform", `translate(${from} ${w < 640 ? h * 0.85 : h * 0.95})`)
   }
 }
