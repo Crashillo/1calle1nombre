@@ -40,8 +40,8 @@ export default class Visor {
   
   build() {
     // static elements
-    this.map = select("#map").on("click", e => this.onMapClick(e))
-    this.svg = this.map.append("svg").attr("preserveAspectRatio", "xMinYMin meet")
+    this.map = select("#map")
+    this.svg = this.map.append("svg").attr("preserveAspectRatio", "xMinYMin meet").on("click", e => this.onMapClick(e))
     this.g = this.svg.append("g")
     this.gBase = this.g.append("g")
     this.gFeatures = this.g.append("g")
@@ -57,6 +57,7 @@ export default class Visor {
     this.colorScale = scaleQuantile(this.range).domain([0, 1])
     this.tick = null
     this.INTERVAL_TIME = 2000
+    this.marginBase = 0.02
     // variables
     this.currentMonthIx = 0
     this.currentFeatureIx = 0
@@ -103,13 +104,15 @@ export default class Visor {
   }
   
   renderBase() {
-    this.projection.fitSize([this.width, this.height], this.baseData)
+    const ne = [this.width * this.marginBase, this.height * this.marginBase]
+    const sw = [this.width * (1 - this.marginBase), this.height * (1 - this.marginBase)]
+    this.projection.fitExtent([ne, sw], this.baseData)
     
     const t = transition().duration(this.INTERVAL_TIME * 0.9)
 
     const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
       ...this.baseData,
-      features: this.baseData.features.filter(d => this.currentGroup && getId(d) === this.currentGroup),
+      features: this.baseData.features.filter(d => !this.currentGroup || getId(d) === this.currentGroup),
     })
     
     this.currentSize = [[x0, y0], [x1, y1]]
@@ -141,14 +144,14 @@ export default class Visor {
       )
       
     //~ this.gBase
-    //~ .append("path")
-    //~ .datum(this.baseLines)
-    //~ .attr("d", geoPath(this.projection))
-    //~ .attr("fill", "none")
-    //~ .attr("pointer-events", "none")
-    //~ .attr("stroke", "var(--bg)")
-    //~ .attr("stroke-width", 0.25)
-    //~ .attr("stroke-linejoin", "round")
+      //~ .append("path")
+      //~ .datum(this.baseLines)
+      //~ .attr("d", geoPath(this.projection))
+      //~ .attr("fill", "none")
+      //~ .attr("pointer-events", "none")
+      //~ .attr("stroke", "var(--bg)")
+      //~ .attr("stroke-width", 0.25)
+      //~ .attr("stroke-linejoin", "round")
   }
   
   renderFeature() {
@@ -197,7 +200,8 @@ export default class Visor {
             .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]]))
           )
           .on("mouseenter", (e, feature) => this.onFeatureMouseenter(e, { feature, months: this.currentMonths }))
-          .on("mouseleave", e => this.onFeatureMouseleave(e, { months: this.currentMonths })),
+          .on("mouseleave", e => this.onFeatureMouseleave(e, { months: this.currentMonths }))
+          .on("click", e => this.onFeatureClick(e, { months: this.currentMonths })),
         update => {
           // reduce the number of transitions
           update.filter(({ activated }) => !activated)
@@ -214,11 +218,13 @@ export default class Visor {
   }
   
   onMapClick({ target }) {
-    if (!this.map.selectAll("path").nodes().includes(target)) {
+    if (this.svg.node() === target) {
       // reset selections
       this.currentGroup = null
       this.renderBase()
-      this.renderFeature()
+      if (this.currentFeature) {
+        this.renderFeature()
+      }
     }
   }
   
@@ -237,6 +243,7 @@ export default class Visor {
   
   onBaseMouseenter({ target }) {
     select(target)
+      .attr("fill", "#000000")
       .transition()
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#0dc5c1")
@@ -278,6 +285,10 @@ export default class Visor {
     this.tooltip.style("opacity", 0)
   }
   
+  onFeatureClick() {
+    this.renderFeature()
+  }
+  
   onResize() {
     this.resize()
     this.renderBase()
@@ -291,6 +302,7 @@ export default class Visor {
     if (this.tick !== null) {
       this.tick.stop()
       this.tick = null
+      this.controls.stop()
       return
     }
     
@@ -299,7 +311,10 @@ export default class Visor {
     this.tick = interval(() => {
       this.currentMonthIx++
       this.renderFeature()
-      if (this.currentMonthIx === this.currentMonths.length - 1) this.tick.stop()
+      if (this.currentMonthIx === this.currentMonths.length - 1) {
+        this.tick.stop()
+        this.controls.stop()
+      }
     }, this.INTERVAL_TIME)
   }
   

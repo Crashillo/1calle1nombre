@@ -28,4 +28,8 @@ export default class Controls {
       this.onStop()
     }
   }
+  
+  stop() {
+    select("#play").classed("pause", false)
+  }
 }
