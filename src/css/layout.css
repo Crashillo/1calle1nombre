@@ -27,9 +27,7 @@ body {
   grid-template-columns: 1fr 1fr;
   grid-gap: var(--space);
   grid-template-areas:
-    "selector legend"
-    "controls legend"
-    ". legend";
+    "controls legend";
 }
 
 @media (min-width: 768px) {
@@ -37,24 +35,19 @@ body {
     grid-template-columns: 1fr;
     grid-template-areas:
       "legend"
-      "controls"
-      "selector";
+      "controls";
   }
 }
 
 .sidebar > :nth-child(1) {
   grid-area: legend;
-  justify-self: end;
+  justify-self: flex-end;
 }
 
 .sidebar > :nth-child(2) {
   grid-area: controls;
-  justify-self: end;
-}
-
-.sidebar > :nth-child(3) {
-  grid-area: selector;
-  justify-self: end;
+  justify-self: flex-end;
+  align-self: baseline;
 }
 
 .card {

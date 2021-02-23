@@ -7,11 +7,12 @@ import { schemeGreens } from "d3-scale-chromatic"
 import { zoom, zoomIdentity } from "d3-zoom"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
-import { percent, formatDate, getProp } from "./helpers"
+import { percent, getProp } from "./helpers"
 import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
 import Legend from "./legend"
 import Controls from "./controls"
 import Slider from "./slider"
+import Tooltip from "./tooltip"
 
 // helpers
 const getId = getProp("properties", FEATURE_ID)
@@ -35,6 +36,10 @@ export default class Visor {
       colorScale: this.colorScale
     })
     
+    this.tooltip = new Tooltip(this.map, {
+      content: this.onTooltipContent
+    })
+    
     addEventListener("resize", () => this.onResize())
   }
   
@@ -46,10 +51,9 @@ export default class Visor {
     this.gBase = this.g.append("g")
     this.gFeatures = this.g.append("g")
     this.gSlider = this.svg.append("g")
-    this.tooltip = this.map.append("div").attr("class", "tooltip card")
     this.sidebar = this.map.append("div").attr("class", "sidebar")
     // common functions
-    this.z = zoom().scaleExtent([1, 8])
+    this.z = zoom().scaleExtent([1, 40])
     this.z.on("zoom", e => this.onZoom(e))
     this.projection = geoConicConformalSpain()
     this.timeScale = scalePoint()
@@ -128,30 +132,31 @@ export default class Visor {
           .translate(-(x0 + x1) / 2, -(y0 + y1) / 2)
       )
 
+
     this.gBase
       .selectAll("path")
       .data(this.baseData.features, getId)
       .join(
         enter => enter
           .append("path")
-          .attr("d", d => geoPath(this.projection)(d))
+          .attr("d", geoPath(this.projection))
           .attr("cursor", "pointer")
           .on("click", (_, d) => this.onBaseClick(d))
           .on("mouseenter", e => this.onBaseMouseenter(e))
           .on("mouseleave", e => this.onBaseMouseleave(e)),
         update => update.call(update => 
-          update.transition(t).attr("d", d => geoPath(this.projection)(d)))
+          update.transition(t).attr("d", geoPath(this.projection)))
       )
       
     //~ this.gBase
-      //~ .append("path")
-      //~ .datum(this.baseLines)
-      //~ .attr("d", geoPath(this.projection))
-      //~ .attr("fill", "none")
-      //~ .attr("pointer-events", "none")
-      //~ .attr("stroke", "var(--bg)")
-      //~ .attr("stroke-width", 0.25)
-      //~ .attr("stroke-linejoin", "round")
+    //~ .append("path")
+    //~ .datum(this.baseLines)
+    //~ .attr("d", geoPath(this.projection))
+    //~ .attr("fill", "none")
+    //~ .attr("pointer-events", "none")
+    //~ .attr("stroke", "var(--bg)")
+    //~ .attr("stroke-width", 0.25)
+    //~ .attr("stroke-linejoin", "round")
   }
   
   renderFeature() {
@@ -162,8 +167,6 @@ export default class Visor {
     // TODO: esto puede sobrar si no filtramos por provincias
     //~ const isFeatureActive = d => {
     //~ const { code } = ELEMENTS[currentFeatureIx]
-    //~ // TODO: ojo!
-    //~ return true
     //~ if (!code || !currentGroup) return true
     //~ return code === getId(d)?.substring(0, 2)
     //~ }
@@ -191,7 +194,7 @@ export default class Visor {
       .join(
         enter => enter
           .append("path")
-          .attr("d", d => geoPath(this.projection)(d))
+          .attr("d", geoPath(this.projection))
           .attr("fill", "black")
           .style("vector-effect", "non-scaling-stroke")
           .style("pointer-events", "auto")
@@ -205,11 +208,13 @@ export default class Visor {
         update => {
           // reduce the number of transitions
           update.filter(({ activated }) => !activated)
+            .attr("d", geoPath(this.projection))
             .attr("fill", "black")
             .style("pointer-events", "none")
           return update
             .filter(({ activated }) => !!activated)
             .call(update => update.transition(t)
+              .attr("d", geoPath(this.projection))
               .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]]))
               .style("pointer-events", "auto"))
         },
@@ -219,12 +224,13 @@ export default class Visor {
   
   onMapClick({ target }) {
     if (this.svg.node() === target) {
-      // reset selections
-      this.currentGroup = null
-      this.renderBase()
-      if (this.currentFeature) {
-        this.renderFeature()
-      }
+      const t = transition().duration(this.INTERVAL_TIME * 0.9)
+      this.svg
+        .transition(t)
+        .call(
+          this.z.transform,
+          zoomIdentity
+        )
     }
   }
   
@@ -256,8 +262,8 @@ export default class Visor {
       .attr("fill", null)
   }
   
-  onFeatureMouseenter({ pageX, pageY, target }, { feature, months }) {
-    select(target)
+  onFeatureMouseenter(event, data) {
+    select(event.target)
       .raise()
       .attr("stroke-width", 5)
       .transition()
@@ -265,13 +271,7 @@ export default class Visor {
       .attr("fill", "#ffcaba")
       .attr("stroke", "#310234")
       
-    this.tooltip
-      .style("opacity", 1)
-      .style("top", `${pageY}px`)
-      .style("left", `${pageX}px`)
-      .html(
-        `${getDesc(feature)}: <em>${percent(getValues(feature)[months[this.currentMonthIx]])}</em>`
-      )
+    this.tooltip.show(event, data)
   }
   
   onFeatureMouseleave({ target }, { months }) {
@@ -281,8 +281,8 @@ export default class Visor {
       .transition()
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", d => this.colorScale(getValues(d)[months[this.currentMonthIx]]))
-
-    this.tooltip.style("opacity", 0)
+      
+    this.tooltip.hide()
   }
   
   onFeatureClick() {
@@ -334,5 +334,9 @@ export default class Visor {
       this.currentMonthIx = ix
       this.renderFeature()
     }
+  }
+  
+  onTooltipContent({ feature, months }) {
+    return `${getDesc(feature)}: <em>${percent(getValues(feature)[months[this.currentMonthIx]])}</em>`
   }
 }

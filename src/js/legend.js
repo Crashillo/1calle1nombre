@@ -2,9 +2,12 @@ import { percent } from "./helpers"
 
 export default class Legend {
   constructor(node, { range, colorScale }) {
-    const legendRanges = node
+    this.container = node
       .append("div")
       .attr("class", "legend card")
+      .on("click", e => this.onClick(e))
+      
+    const legendRanges = this.container
       .selectAll(".legend__range")
       .data(range)
       .join("div")
@@ -19,5 +22,9 @@ export default class Legend {
       const [start, end] = colorScale.invertExtent(d)
       return `${percent(start)} - ${percent(end)}`
     })
+  }
+  
+  onClick() {
+    // TODO: addClass para ocultarla
   }
 }
