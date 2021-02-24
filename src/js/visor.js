@@ -99,7 +99,8 @@ export default class Visor {
       this.slider = new Slider(this.gSlider, {
         drag: e => this.onDrag(e),
         timeScale: this.timeScale,
-        container: this.svg
+        container: this.svg,
+        speed: this.INTERVAL_TIME
       })
     }
     

@@ -3,10 +3,11 @@ import { transition } from "d3-transition"
 import { formatDate } from "./helpers"
 
 export default class Slider {
-  constructor(node, { drag, timeScale, container }) {
+  constructor(node, { drag, timeScale, container, speed }) {
     this.build(node)
 
     this.timeScale = timeScale
+    this.speed = speed
     
     this.container = container
     this.resize()
@@ -48,8 +49,8 @@ export default class Slider {
   }
   
   render({ month, months }) {
-    const t1 = transition().duration(500)
-    const t2 = transition().duration(2000)
+    const t1 = transition().duration(this.speed * 0.75)
+    const t2 = transition().duration(this.speed)
     
     this.circle
       .transition(t1)
