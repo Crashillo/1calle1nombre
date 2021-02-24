@@ -37,7 +37,7 @@ export default class Visor {
     })
     
     this.tooltip = new Tooltip(this.map, {
-      content: this.onTooltipContent
+      content: e => this.onTooltipContent(e)
     })
     
     addEventListener("resize", () => this.onResize())
