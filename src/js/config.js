@@ -17,12 +17,13 @@ import NC from "url:../static/NC.topo.json"
 import MC from "url:../static/MC.topo.json"
 import ES from "url:../static/ES.topo.json"
 import ESm from "url:../static/ES.municipios.topo.json"
+import ESp from "url:../static/ES.provincias.topo.json"
 
 export const FEATURE_ID = "id"
 export const FEATURE_VALUES = "values"
 export const FEATURE_DESC = "name"
 export const URLS = [
-  [{ url: ES }, { url: ESm }],
+  [{ url: ES }, { url: ESp }],
   [
     { url: AN, code: "ES-AN" },
     { url: AS, code: "ES-AS" },

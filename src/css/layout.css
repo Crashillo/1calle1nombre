@@ -26,8 +26,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-gap: var(--space);
-  grid-template-areas:
-    "controls legend";
+  grid-template-areas: "controls legend";
 }
 
 @media (min-width: 768px) {

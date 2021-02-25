@@ -64,7 +64,7 @@ export default class Slider {
           .append("text")
           .attr("dy", "-1em")
           .attr("text-anchor", "end")
-          .attr("fill", "white")
+          .attr("fill", "#FFFFFF")
           .attr("font-size", "2em")
           .text(d => `${formatDate(new Date(d), { month: "long" })} '${formatDate(new Date(d), { year: "2-digit" })}`)
           .call(enter => enter
