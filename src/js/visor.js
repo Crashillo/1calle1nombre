@@ -133,7 +133,6 @@ export default class Visor {
           .translate(-(x0 + x1) / 2, -(y0 + y1) / 2)
       )
 
-
     this.gBase
       .selectAll("path")
       .data(this.baseData.features, getId)
@@ -145,19 +144,18 @@ export default class Visor {
           .on("click", (_, d) => this.onBaseClick(d))
           .on("mouseenter", e => this.onBaseMouseenter(e))
           .on("mouseleave", e => this.onBaseMouseleave(e)),
-        update => update.call(update => 
-          update.transition(t).attr("d", geoPath(this.projection)))
+        update => update.call(update => update.transition(t).attr("d", geoPath(this.projection)))
       )
       
-    //~ this.gBase
-    //~ .append("path")
-    //~ .datum(this.baseLines)
-    //~ .attr("d", geoPath(this.projection))
-    //~ .attr("fill", "none")
-    //~ .attr("pointer-events", "none")
-    //~ .attr("stroke", "var(--bg)")
-    //~ .attr("stroke-width", 0.25)
-    //~ .attr("stroke-linejoin", "round")
+    this.gBase
+      .append("path")
+      .datum(this.baseLines)
+      .attr("d", geoPath(this.projection))
+      .attr("fill", "none")
+      .attr("stroke", "var(--bg)")
+      .attr("stroke-width", 0.25)
+      .attr("stroke-linejoin", "round")
+      .style("pointer-events", "none")
   }
   
   renderFeature() {
@@ -225,9 +223,9 @@ export default class Visor {
   
   onMapClick({ target }) {
     if (this.svg.node() === target) {
-      const t = transition().duration(this.INTERVAL_TIME * 0.9)
       this.svg
-        .transition(t)
+        .transition()
+        .duration(this.INTERVAL_TIME * 0.9)
         .call(
           this.z.transform,
           zoomIdentity
@@ -251,23 +249,23 @@ export default class Visor {
   onBaseMouseenter({ target }) {
     select(target)
       .attr("fill", "#000000")
-      .transition()
+      .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#0dc5c1")
   }
   
   onBaseMouseleave({ target }) {
     select(target)
-      .transition()
+      .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
-      .attr("fill", null)
+      .attr("fill", "#000000")
   }
   
   onFeatureMouseenter(event, data) {
     select(event.target)
       .raise()
       .attr("stroke-width", 5)
-      .transition()
+      .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#ffcaba")
       .attr("stroke", "#310234")
@@ -279,7 +277,7 @@ export default class Visor {
     select(target)
       .attr("stroke-width", 0)
       .attr("stroke", null)
-      .transition()
+      .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", d => this.colorScale(getValues(d)[months[this.currentMonthIx]]))
       
