@@ -6,3 +6,15 @@
   transform: translate(10%, -100%);
   pointer-events: none;
 }
+
+.tooltip table {
+  width: 100%;
+}
+
+.tooltip caption {
+  white-space: nowrap;
+}
+
+.tooltip td {
+  text-align: center;
+}

@@ -7,7 +7,7 @@ import { schemeGreens } from "d3-scale-chromatic"
 import { zoom, zoomIdentity } from "d3-zoom"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
-import { percent, getProp } from "./helpers"
+import { percent, getProp, formatDate } from "./helpers"
 import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
 import Legend from "./legend"
 import Controls from "./controls"
@@ -341,6 +341,9 @@ export default class Visor {
   }
   
   onTooltipContent({ feature, months }) {
-    return `${getDesc(feature)}: <em>${percent(getValues(feature)[months[this.currentMonthIx]])}</em>`
+    const tr = row => `<tr><td>${formatDate(new Date(date), { month: "short", year: "2-digit" })}</td><td>${percent(getValues(feature)[row]) || "--"}</td></tr>`
+    const caption = `<caption>${getDesc(feature)}</caption>`
+    const thead = `<thead><th>Mes</th><th>%</th></thead>`
+    return `<table>${caption}${thead}<tbody>${months.map(m => tr(m)).join("")}</tbody></table>`
   }
 }
