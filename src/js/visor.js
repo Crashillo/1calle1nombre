@@ -341,7 +341,7 @@ export default class Visor {
   }
   
   onTooltipContent({ feature, months }) {
-    const tr = row => `<tr><td>${formatDate(new Date(date), { month: "short", year: "2-digit" })}</td><td>${percent(getValues(feature)[row]) || "--"}</td></tr>`
+    const tr = row => `<tr><td>${formatDate(new Date(row), { month: "short", year: "2-digit" })}</td><td>${percent(getValues(feature)[row]) || "--"}</td></tr>`
     const caption = `<caption>${getDesc(feature)}</caption>`
     const thead = `<thead><th>Mes</th><th>%</th></thead>`
     return `<table>${caption}${thead}<tbody>${months.map(m => tr(m)).join("")}</tbody></table>`
