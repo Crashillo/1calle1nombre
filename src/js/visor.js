@@ -194,12 +194,15 @@ export default class Visor {
         enter => enter
           .append("path")
           .attr("d", geoPath(this.projection))
-          .attr("fill", "black")
+          .attr("fill", "#000")
+          .attr("stroke", "#000")
+          .attr("stroke-alignment", "inner")
           .style("vector-effect", "non-scaling-stroke")
           .style("pointer-events", "auto")
           .call(enter => enter
             .transition(t)
-            .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]]))
+            .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]] || 0 ))
+            .attr("stroke", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]] || 0))
           )
           .on("mouseenter", (e, feature) => this.onFeatureMouseenter(e, { feature, months: this.currentMonths }))
           .on("mouseleave", e => this.onFeatureMouseleave(e, { months: this.currentMonths }))
@@ -208,16 +211,17 @@ export default class Visor {
           // reduce the number of transitions
           update.filter(({ activated }) => !activated)
             .attr("d", geoPath(this.projection))
-            .attr("fill", "black")
+            .attr("fill", "#000")
             .style("pointer-events", "none")
           return update
             .filter(({ activated }) => !!activated)
             .call(update => update.transition(t)
               .attr("d", geoPath(this.projection))
-              .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]]))
+              .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]] || 0))
+              .attr("stroke", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]] || 0))
               .style("pointer-events", "auto"))
         },
-        exit => exit.call(exit => exit.transition(t).attr("fill", "black").remove())
+        exit => exit.call(exit => exit.transition(t).attr("fill", "#000").remove())
       )
   }
   
@@ -248,7 +252,7 @@ export default class Visor {
   
   onBaseMouseenter({ target }) {
     select(target)
-      .attr("fill", "#000000")
+      .attr("fill", "#000")
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#0dc5c1")
@@ -258,7 +262,7 @@ export default class Visor {
     select(target)
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
-      .attr("fill", "#000000")
+      .attr("fill", "#000")
   }
   
   onFeatureMouseenter(event, data) {
@@ -276,10 +280,11 @@ export default class Visor {
   onFeatureMouseleave({ target }, { months }) {
     select(target)
       .attr("stroke-width", 0)
-      .attr("stroke", null)
+      .attr("stroke", "#000")
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
-      .attr("fill", d => this.colorScale(getValues(d)[months[this.currentMonthIx]]))
+      .attr("fill", d => this.colorScale(getValues(d)[months[this.currentMonthIx]] || 0))
+      .attr("stroke", d => this.colorScale(getValues(d)[months[this.currentMonthIx]] || 0))
       
     this.tooltip.hide()
   }
