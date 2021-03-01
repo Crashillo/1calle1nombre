@@ -3,9 +3,9 @@
   "version": "1.0.0-1",
   "description": "Visto #1calle1nombre",
   "scripts": {
-    "start": "parcel serve './src/**/*.html' --open",
+    "start": "BUILD=$(date +%s) parcel serve './src/**/*.html' --open",
     "prebuild": "rm -rf ./dist/*",
-    "build": "BUILD=$(date) parcel build ./src/index.html --public-url .",
+    "build": "BUILD=$(date +%s) parcel build ./src/index.html --public-url .",
     "lint": "eslint 'src/**/*.js' || stylelint 'src/**/*.css'",
     "lint:fix": "eslint 'src/**/*.js' --fix || stylelint 'src/**/*.css' --fix",
     "deploy": "npm run build && gh-pages -d dist -r git@github.com:Crashillo/1calle1nombre.git"

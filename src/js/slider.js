@@ -80,7 +80,7 @@ export default class Slider {
     const [,,w, h] = this.container.attr("viewBox").split(",")
     const [from, to] = [w < 640 ? w * 0.05 : w * 0.7, w * 0.95]
     
-    this.width = to -from
+    this.width = to - from
     this.timeScale.range([from, to])
     this.lineSlider.attr("x2", this.width)
     this.ghostLineSlider.attr("x2", this.width)

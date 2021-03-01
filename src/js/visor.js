@@ -60,11 +60,11 @@ export default class Visor {
     this.range = schemeGreens[5]
     this.colorScale = scaleQuantile(this.range).domain([0, 1])
     this.tick = null
-    this.INTERVAL_TIME = 2000
+    this.INTERVAL_TIME = 1500
     this.marginBase = 0.02
     // variables
     this.currentMonthIx = 0
-    this.currentFeatureIx = 0
+    //~ this.currentFeatureIx = 0
     this.currentGroup = null
   }
   
@@ -86,7 +86,9 @@ export default class Visor {
           .map(({ properties: { values } }) => Object.keys(values))
           .flat()
       ),
-    ]
+    ].sort()
+    // set the most up to date month
+    this.currentMonthIx = this.currentMonths.length - 1
     
     if (this.sidebar.selectChildren().nodes().length === 1) {
       this.controls = new Controls(this.sidebar, {
@@ -310,7 +312,10 @@ export default class Visor {
       return
     }
     
-    if (this.currentMonthIx === this.currentMonths.length - 1) this.currentMonthIx = 0
+    if (this.currentMonthIx === this.currentMonths.length - 1) {
+      this.currentMonthIx = 0
+      this.renderFeature()
+    }
     
     this.tick = interval(() => {
       this.currentMonthIx++
@@ -323,7 +328,7 @@ export default class Visor {
   }
   
   onStop() {
-    this.currentMonthIx = 0
+    this.currentMonthIx = this.currentMonths.length - 1
     if (this.tick !== null) {
       this.tick.stop()
       this.tick = null
@@ -340,7 +345,8 @@ export default class Visor {
     }
   }
   
-  onTooltipContent({ feature, months }) {
+  onTooltipContent({ feature, months: m }) {
+    const months = m.slice(-12) // last year
     const tr = row => `<tr><td>${formatDate(new Date(row), { month: "short", year: "2-digit" })}</td><td>${percent(getValues(feature)[row]) || "--"}</td></tr>`
     const caption = `<caption>${getDesc(feature)}</caption>`
     const thead = `<thead><th>Mes</th><th>%</th></thead>`
