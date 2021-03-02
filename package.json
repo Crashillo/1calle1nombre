@@ -3,7 +3,7 @@
   "version": "1.0.0-1",
   "description": "Visto #1calle1nombre",
   "scripts": {
-    "start": "BUILD=$(date +%s) parcel serve './src/**/*.html' --open",
+    "start": "parcel serve './src/**/*.html' --open",
     "prebuild": "rm -rf ./dist/*",
     "build": "BUILD=$(date +%s) parcel build ./src/index.html --public-url .",
     "lint": "eslint 'src/**/*.js' || stylelint 'src/**/*.css'",

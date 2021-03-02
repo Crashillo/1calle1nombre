@@ -1,11 +1,23 @@
 .legend {
   padding: calc(1 * var(--space));
   display: grid;
+  transition: transform 250ms cubic-bezier(.68,-0.55,.27,1.55);
+}
+
+.legend.hidden {
+  transform: translateY(-76.5%);
+}
+
+@media (min-width: 768px) {
+  .legend.hidden {
+    transform: none;
+  }
 }
 
 .legend__range {
   display: flex;
   align-items: center;
+  pointer-events: none;
 }
 
 .legend__range:not(:last-child) {

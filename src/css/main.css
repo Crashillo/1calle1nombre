@@ -4,12 +4,6 @@
   --space: 0.5rem;
 }
 
-@media (min-width: 768px) {
-  :root {
-    --space: 1rem;
-  }
-}
-
 @import "./layout.css";
 @import "./tooltip.css";
 @import "./legend.css";

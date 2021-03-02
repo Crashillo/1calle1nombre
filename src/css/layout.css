@@ -52,7 +52,7 @@ body {
 .card {
   background: var(--color);
   padding: calc(0.5 * var(--space));
-  border-radius: 5px;
+  border-radius: 3px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.75);
   box-sizing: border-box;
 }

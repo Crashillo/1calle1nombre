@@ -25,6 +25,6 @@ export default class Legend {
   }
   
   onClick() {
-    // TODO: addClass para ocultarla
+    this.container.classed("hidden", !this.container.classed("hidden"))
   }
 }

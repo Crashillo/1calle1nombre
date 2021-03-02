@@ -57,7 +57,7 @@ export default class Visor {
     this.z.on("zoom", e => this.onZoom(e))
     this.projection = geoConicConformalSpain()
     this.timeScale = scalePoint()
-    this.range = schemeGreens[5]
+    this.range = schemeGreens[9]
     this.colorScale = scaleQuantile(this.range).domain([0, 1])
     this.tick = null
     this.INTERVAL_TIME = 1500
