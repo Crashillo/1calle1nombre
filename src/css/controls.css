@@ -22,37 +22,6 @@
   border-bottom-right-radius: inherit;
 }
 
-.control__button-play {
-  border: 0;
-  display: inline-block;
+.control__button > * {
   pointer-events: none;
-  background: transparent;
-  box-sizing: border-box;
-  width: 0;
-  height: var(--space);
-  border-color: transparent transparent transparent var(--bg);
-  transition: 100ms all ease;
-  border-style: solid;
-  border-width: calc(0.5 * var(--space)) 0 calc(0.5 * var(--space)) var(--space);
-}
-
-.control__button-play:hover {
-  border-color: transparent transparent transparent #404040;
-}
-
-.control__button.pause .control__button-play {
-  border-style: double;
-  border-width: 0 0 0 var(--space);
-}
-
-.control__button-stop {
-  display: inline-block;
-  pointer-events: none;
-  width: var(--space);
-  height: var(--space);
-  background: var(--bg);
-}
-
-.control__button-stop:hover {
-  background: #404040;
 }

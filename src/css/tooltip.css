@@ -9,12 +9,13 @@
 
 .tooltip table {
   width: 100%;
+  padding: 0 var(--space);
 }
 
-.tooltip caption {
-  white-space: nowrap;
+.tooltip td:first-child {
+  text-align: right;
 }
 
-.tooltip td {
-  text-align: center;
+.tooltip td:last-child {
+  text-align: left;
 }
