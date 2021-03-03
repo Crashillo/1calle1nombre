@@ -21,16 +21,9 @@ const getValues = getProp("properties", FEATURE_VALUES)
 const getDesc = getProp("properties", FEATURE_DESC)
 
 export default class Visor {
-  constructor({ features, lines }) {
+  constructor() {
     this.build()
     this.resize()
-    
-    const [featureProp] = Object.keys(features.objects)
-    const [linesProp] = Object.keys(lines.objects)
-    this.baseData = feature(features, features.objects[featureProp])
-    this.baseLines = mesh(lines, lines.objects[linesProp], (a, b) => a !== b)
-    
-    this.renderBase()
     
     this.legend = new Legend(this.sidebar, {
       range: this.range,
@@ -45,7 +38,7 @@ export default class Visor {
     
     addEventListener("resize", () => this.onResize())
     
-    window.yo = this
+    //~ window.yo = this
   }
   
   build() {
@@ -76,6 +69,15 @@ export default class Visor {
   resize() {
     ({ width: this.width, height: this.height } = this.map.node().getBoundingClientRect())
     this.svg.attr("viewBox", [0, 0, this.width, this.height])
+  }
+
+  load({ features, lines }) {
+    const [featureProp] = Object.keys(features.objects)
+    const [linesProp] = Object.keys(lines.objects)
+    this.baseData = feature(features, features.objects[featureProp])
+    this.baseLines = mesh(lines, lines.objects[linesProp], (a, b) => a !== b)
+    
+    this.renderBase()
   }
   
   async reload(url) {
