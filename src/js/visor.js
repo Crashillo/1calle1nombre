@@ -44,6 +44,8 @@ export default class Visor {
     new Theme(this.sidebar)
     
     addEventListener("resize", () => this.onResize())
+    
+    window.yo = this
   }
   
   build() {
@@ -92,6 +94,12 @@ export default class Visor {
     ].sort()
     // set the most up to date month
     this.currentMonthIx = this.currentMonths.length - 1
+    
+    const values = this.currentFeature.features
+          .map(({ properties: { values } }) => Object.values(values))
+          .flat()
+    this.colorScale.domain([ Math.min(...values), Math.max(...values)])
+    this.legend.render()
     
     if (!this.controls) {
       this.controls = new Controls(this.sidebar, {
