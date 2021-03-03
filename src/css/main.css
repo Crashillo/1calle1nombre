@@ -1,23 +1,23 @@
 :root {
   --bg: #003545;
-  --color: #fafafa;
+  --color: #b3cde0;
   --space: 0.5rem;
 }
 
 :root[theme="light"] {
-  --bg: #fafafa;
+  --bg: #b3cde0;
   --color: #003545;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #fafafa;
+    --bg: #b3cde0;
     --color: #003545;
   }
   
   :root[theme="dark"] {
     --bg: #003545;
-    --color: #fafafa;
+    --color: #b3cde0;
   }
 }
 

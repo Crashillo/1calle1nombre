@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   pointer-events: none;
-  color: var(--bg);
+  color: #000;
 }
 
 .legend__range:not(:last-child) {

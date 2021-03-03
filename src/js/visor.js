@@ -13,6 +13,7 @@ import Legend from "./legend"
 import Controls from "./controls"
 import Slider from "./slider"
 import Tooltip from "./tooltip"
+import Theme from "./theme"
 
 // helpers
 const getId = getProp("properties", FEATURE_ID)
@@ -39,6 +40,8 @@ export default class Visor {
     this.tooltip = new Tooltip(this.map, {
       content: e => this.onTooltipContent(e)
     })
+    
+    new Theme(this.sidebar)
     
     addEventListener("resize", () => this.onResize())
   }
@@ -90,14 +93,14 @@ export default class Visor {
     // set the most up to date month
     this.currentMonthIx = this.currentMonths.length - 1
     
-    if (this.sidebar.selectChildren().nodes().length === 1) {
+    if (!this.controls) {
       this.controls = new Controls(this.sidebar, {
         play: () => this.onPlay(),
         stop: () => this.onStop()
       })
     }
     
-    if (!this.gSlider.selectChildren().nodes().length) {
+    if (!this.slider) {
       this.slider = new Slider(this.gSlider, {
         drag: e => this.onDrag(e),
         timeScale: this.timeScale,

@@ -24,33 +24,38 @@ body {
   right: var(--space);
   z-index: 2;
   display: grid;
-  grid-template-columns: 1fr 1fr;
   grid-gap: var(--space);
-  grid-template-areas: "controls legend";
+  grid-template-areas: "theme controls legend";
 }
 
 @media (min-width: 768px) {
   .sidebar {
-    grid-template-columns: 1fr;
     grid-template-areas:
       "legend"
-      "controls";
+      "controls"
+      "theme";
   }
 }
 
-.sidebar > :nth-child(1) {
+.sidebar .legend {
   grid-area: legend;
   justify-self: flex-end;
 }
 
-.sidebar > :nth-child(2) {
+.sidebar .controls {
   grid-area: controls;
   justify-self: flex-end;
   align-self: baseline;
 }
 
+.sidebar .theme {
+  grid-area: theme;
+  justify-self: flex-end;
+  align-self: baseline;
+}
+
 .card {
-  background: var(--color);
+  background: #fff;
   padding: calc(0.5 * var(--space));
   border-radius: 3px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.75);

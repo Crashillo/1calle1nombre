@@ -5,11 +5,11 @@
 
 .control__button {
   display: grid;
-  align-items: center;
-  justify-items: center;
+  place-content: center;
   cursor: pointer;
   width: calc(2rem + var(--space));
   height: calc(2rem + var(--space));
+  background: #fafafa;
 }
 
 .control__button:first-child {

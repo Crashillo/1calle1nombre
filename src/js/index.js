@@ -1,5 +1,4 @@
 import Visor from "./visor"
-import "./theme"
 import { URLS } from "./config"
 
 if (process.env.BUILD) {

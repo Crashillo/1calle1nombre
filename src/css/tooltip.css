@@ -12,10 +12,6 @@
   padding: 0 var(--space);
 }
 
-.tooltip td:first-child {
-  text-align: right;
-}
-
-.tooltip td:last-child {
-  text-align: left;
+.tooltip td {
+  text-align: center;
 }
