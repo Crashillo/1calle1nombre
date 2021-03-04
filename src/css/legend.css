@@ -5,7 +5,7 @@
 }
 
 .legend.hidden {
-  transform: translateY(-76.5%);
+  transform: translateY(-80%);
 }
 
 @media (min-width: 768px) {
