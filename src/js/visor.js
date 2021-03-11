@@ -288,7 +288,7 @@ export default class Visor {
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#ffcaba")
       .attr("stroke", "#310234")
-      
+
     this.tooltip.show(event, data)
   }
   

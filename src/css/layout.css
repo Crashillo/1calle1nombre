@@ -26,6 +26,7 @@ body {
   display: grid;
   grid-gap: var(--space);
   grid-template-areas: "theme controls legend";
+  pointer-events: none;
 }
 
 @media (min-width: 768px) {
@@ -59,4 +60,5 @@ body {
   border-radius: 3px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.75);
   box-sizing: border-box;
+  pointer-events: auto;
 }
