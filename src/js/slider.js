@@ -51,7 +51,7 @@ export default class Slider {
   render({ month, months }) {
     const t1 = transition().duration(this.speed * 0.75)
     const t2 = transition().duration(this.speed)
-    
+
     this.circle
       .transition(t1)
       .attr("cx", month * this.timeScale.step())

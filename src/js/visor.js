@@ -38,7 +38,7 @@ export default class Visor {
     
     addEventListener("resize", () => this.onResize())
     
-    //~ window.yo = this
+    window.yo = this
   }
   
   build() {
@@ -76,33 +76,7 @@ export default class Visor {
     const [linesProp] = Object.keys(lines.objects)
     this.baseData = feature(features, features.objects[featureProp])
     this.baseLines = mesh(lines, lines.objects[linesProp], (a, b) => a !== b)
-    
-    this.renderBase()
-  }
-  
-  async reload(url) {
-    const blob = await fetch(url)
-    const topojson = await blob.json()
-    const [prop] = Object.keys(topojson.objects)
-    this.currentFeature = feature(topojson, topojson.objects[prop])
 
-    // set the differents month-year tuples
-    this.currentMonths = [
-      ...new Set(
-        this.currentFeature.features
-          .map(({ properties: { values } }) => Object.keys(values))
-          .flat()
-      ),
-    ].sort()
-    // set the most up to date month
-    this.currentMonthIx = this.currentMonths.length - 1
-    
-    const values = this.currentFeature.features
-          .map(({ properties: { values } }) => Object.values(values))
-          .flat()
-    this.colorScale.domain([ Math.min(...values), Math.max(...values)])
-    this.legend.render()
-    
     if (!this.controls) {
       this.controls = new Controls(this.sidebar, {
         play: () => this.onPlay(),
@@ -118,6 +92,66 @@ export default class Visor {
         speed: this.INTERVAL_TIME
       })
     }
+
+    // set the differents month-year tuples
+    this.currentMonths = [
+      ...new Set(
+        this.baseData.features
+          .map(({ properties: { values } }) => Object.keys(values))
+          .flat()
+      ),
+    ].sort()
+    // set the most up to date month
+    this.currentMonthIx = this.currentMonths.length - 1
+    
+    const values = this.baseData.features
+          .map(({ properties: { values } }) => Object.values(values))
+          .flat()
+    this.colorScale.domain([ Math.min(...values), Math.max(...values)])
+    this.legend.render()
+    
+    this.timeScale.domain(this.currentMonths)
+    this.renderBase()
+  }
+  
+  async reload(url) {
+    const blob = await fetch(url)
+    const topojson = await blob.json()
+    const [prop] = Object.keys(topojson.objects)
+    this.currentFeature = feature(topojson, topojson.objects[prop])
+
+    //~ if (!this.controls) {
+      //~ this.controls = new Controls(this.sidebar, {
+        //~ play: () => this.onPlay(),
+        //~ stop: () => this.onStop()
+      //~ })
+    //~ }
+    
+    //~ if (!this.slider) {
+      //~ this.slider = new Slider(this.gSlider, {
+        //~ drag: e => this.onDrag(e),
+        //~ timeScale: this.timeScale,
+        //~ container: this.svg,
+        //~ speed: this.INTERVAL_TIME
+      //~ })
+    //~ }
+
+    //~ // set the differents month-year tuples
+    //~ this.currentMonths = [
+      //~ ...new Set(
+        //~ this.currentFeature.features
+          //~ .map(({ properties: { values } }) => Object.keys(values))
+          //~ .flat()
+      //~ ),
+    //~ ].sort()
+    //~ // set the most up to date month
+    //~ this.currentMonthIx = this.currentMonths.length - 1
+    
+    //~ const values = this.currentFeature.features
+          //~ .map(({ properties: { values } }) => Object.values(values))
+          //~ .flat()
+    //~ this.colorScale.domain([ Math.min(...values), Math.max(...values)])
+    //~ this.legend.render()
     
     this.timeScale.domain(this.currentMonths)
     this.renderFeature()
@@ -156,10 +190,28 @@ export default class Visor {
           .append("path")
           .attr("d", geoPath(this.projection))
           .attr("cursor", "pointer")
+          .attr("fill-opacity", 1)
           .on("click", (_, d) => this.onBaseClick(d))
+          .call(enter => enter
+            .transition(t)
+            .attr("fill", d => this.setColor(d))
+          )
           .on("mouseenter", e => this.onBaseMouseenter(e))
           .on("mouseleave", e => this.onBaseMouseleave(e)),
-        update => update.call(update => update.transition(t).attr("d", geoPath(this.projection)))
+        update => {
+          if (this.currentGroup) {
+            update
+              .transition(t)
+              .attr("fill-opacity", 0.1)
+          } else {
+            update.call(update => update
+              .transition(t)
+              .attr("d", geoPath(this.projection))
+              .attr("fill", d => this.setColor(d))
+              .attr("fill-opacity", 1)
+            )
+          }
+        }
       )
       
     this.gBase
@@ -175,8 +227,6 @@ export default class Visor {
   
   renderFeature() {
     this.projection.fitExtent(this.currentSize, this.currentFeature)
-    // update slider, if any   
-    this.slider?.render({ month: this.currentMonthIx, months: this.currentMonths })
 
     // TODO: esto puede sobrar si no filtramos por provincias
     //~ const isFeatureActive = d => {
@@ -186,25 +236,28 @@ export default class Visor {
     //~ }
     
     const t = transition().duration(this.INTERVAL_TIME * 0.9)
-    const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
-      ...this.currentFeature,
-      features: this.currentFeature.features,
-    })
 
-    this.svg.call(this.z)
-    this.svg
-      .transition(t)
-      .call(
-        this.z.transform,
-        zoomIdentity
-          .translate(this.width / 2, this.height / 2)
-          .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.width, (y1 - y0) / this.height)))
-          .translate(-(x0 + x1) / 2, -(y0 + y1) / 2)
-      )
+    if (this.currentFeature) {
+      const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
+        ...this.currentFeature,
+        features: this.currentFeature?.features,
+      })
+
+      this.svg.call(this.z)
+      this.svg
+        .transition(t)
+        .call(
+          this.z.transform,
+          zoomIdentity
+            .translate(this.width / 2, this.height / 2)
+            .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.width, (y1 - y0) / this.height)))
+            .translate(-(x0 + x1) / 2, -(y0 + y1) / 2)
+        )
+    }
 
     this.gFeatures
       .selectAll("path")
-      .data(this.currentFeature.features.map(d => ({ ...d, activated: true })), getId)
+      .data(this.currentFeature ? this.currentFeature.features.map(d => ({ ...d, activated: true })) : [], getId)
       .join(
         enter => enter
           .append("path")
@@ -216,8 +269,8 @@ export default class Visor {
           .style("pointer-events", "auto")
           .call(enter => enter
             .transition(t)
-            .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]] || 0 ))
-            .attr("stroke", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]] || 0))
+            .attr("fill", d => this.setColor(d))
+            .attr("stroke", d => this.setColor(d))
           )
           .on("mouseenter", (e, feature) => this.onFeatureMouseenter(e, { feature, months: this.currentMonths }))
           .on("mouseleave", e => this.onFeatureMouseleave(e, { months: this.currentMonths }))
@@ -228,16 +281,28 @@ export default class Visor {
             .attr("d", geoPath(this.projection))
             .attr("fill", "#000")
             .style("pointer-events", "none")
+
           return update
-            .filter(({ activated }) => !!activated)
-            .call(update => update.transition(t)
+            //~ .filter(({ activated }) => !!activated)
+            .filter(d => {
+              const [current, previous] = [this.currentMonths[this.currentMonthIx], this.currentMonths[this.currentMonthIx-1]]
+              const values = getValues(d)
+
+              return values[current] !== values[previous]
+            })
+            .call(update => update
+              .transition(t)
               .attr("d", geoPath(this.projection))
-              .attr("fill", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]] || 0))
-              .attr("stroke", d => this.colorScale(getValues(d)[this.currentMonths[this.currentMonthIx]] || 0))
+              .attr("fill", d => this.setColor(d))
+              .attr("stroke", d => this.setColor(d))
               .style("pointer-events", "auto"))
         },
-        exit => exit.call(exit => exit.transition(t).attr("fill", "#000").remove())
+        exit => exit.call(exit => exit.attr("stroke", "none").transition(t).attr("fill-opacity", 0).remove())
       )
+  }
+
+  setColor(feature) {
+    return this.colorScale(getValues(feature)[this.currentMonths[this.currentMonthIx]] || 0)
   }
   
   onMapClick({ target }) {
@@ -249,6 +314,11 @@ export default class Visor {
           this.z.transform,
           zoomIdentity
         )
+
+      this.currentGroup = null
+      this.renderBase()
+      this.currentFeature = null
+      this.renderFeature()
     }
   }
   
@@ -267,7 +337,6 @@ export default class Visor {
   
   onBaseMouseenter({ target }) {
     select(target)
-      .attr("fill", "#000")
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#0dc5c1")
@@ -277,7 +346,7 @@ export default class Visor {
     select(target)
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
-      .attr("fill", "#000")
+      .attr("fill", d => this.setColor(d))
   }
   
   onFeatureMouseenter(event, data) {
@@ -327,12 +396,15 @@ export default class Visor {
     
     if (this.currentMonthIx === this.currentMonths.length - 1) {
       this.currentMonthIx = 0
-      this.renderFeature()
+      this.currentFeature ? this.renderFeature() : this.renderBase()
     }
     
     this.tick = interval(() => {
       this.currentMonthIx++
-      this.renderFeature()
+      this.currentFeature ? this.renderFeature() : this.renderBase()
+
+      this.slider.render({ month: this.currentMonthIx, months: this.currentMonths })
+
       if (this.currentMonthIx === this.currentMonths.length - 1) {
         this.tick.stop()
         this.controls.stop()
@@ -346,7 +418,8 @@ export default class Visor {
       this.tick.stop()
       this.tick = null
     }
-    this.renderFeature()
+    
+    this.currentFeature ? this.renderFeature() : this.renderBase()
   }
   
   onDrag(x) {
@@ -354,7 +427,8 @@ export default class Visor {
 
     if (ix !== this.currentMonthIx) {
       this.currentMonthIx = ix
-      this.renderFeature()
+      this.currentFeature ? this.renderFeature() : this.renderBase()
+      this.slider.render({ month: this.currentMonthIx, months: this.currentMonths })
     }
   }
   
