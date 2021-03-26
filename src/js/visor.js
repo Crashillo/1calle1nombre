@@ -56,7 +56,7 @@ export default class Visor {
     this.projection = geoConicConformalSpain()
     this.timeScale = scalePoint()
     this.range = schemeGreens[9]
-    this.colorScale = scaleQuantile(this.range).domain([0, 1])
+    this.colorScale = scaleQuantile(this.range).domain([0, 0.99])
     this.tick = null
     this.INTERVAL_TIME = 1500
     this.marginBase = 0.02
@@ -105,8 +105,8 @@ export default class Visor {
     this.currentMonthIx = this.currentMonths.length - 1
     
     const values = this.baseData.features
-          .map(({ properties: { values } }) => Object.values(values))
-          .flat()
+      .map(({ properties: { values } }) => Object.values(values))
+      .flat()
     this.colorScale.domain([ Math.min(...values), Math.max(...values)])
     this.legend.render()
     
@@ -120,38 +120,22 @@ export default class Visor {
     const [prop] = Object.keys(topojson.objects)
     this.currentFeature = feature(topojson, topojson.objects[prop])
 
-    //~ if (!this.controls) {
-      //~ this.controls = new Controls(this.sidebar, {
-        //~ play: () => this.onPlay(),
-        //~ stop: () => this.onStop()
-      //~ })
-    //~ }
-    
-    //~ if (!this.slider) {
-      //~ this.slider = new Slider(this.gSlider, {
-        //~ drag: e => this.onDrag(e),
-        //~ timeScale: this.timeScale,
-        //~ container: this.svg,
-        //~ speed: this.INTERVAL_TIME
-      //~ })
-    //~ }
-
     //~ // set the differents month-year tuples
     //~ this.currentMonths = [
-      //~ ...new Set(
-        //~ this.currentFeature.features
-          //~ .map(({ properties: { values } }) => Object.keys(values))
-          //~ .flat()
-      //~ ),
+    //~ ...new Set(
+    //~ this.currentFeature.features
+    //~ .map(({ properties: { values } }) => Object.keys(values))
+    //~ .flat()
+    //~ ),
     //~ ].sort()
     //~ // set the most up to date month
     //~ this.currentMonthIx = this.currentMonths.length - 1
     
-    //~ const values = this.currentFeature.features
-          //~ .map(({ properties: { values } }) => Object.values(values))
-          //~ .flat()
-    //~ this.colorScale.domain([ Math.min(...values), Math.max(...values)])
-    //~ this.legend.render()
+    const values = this.currentFeature.features
+      .map(({ properties: { values } }) => Object.values(values))
+      .flat()
+    this.colorScale.domain([ Math.min(...values), Math.max(...values)])
+    this.legend.render()
     
     this.timeScale.domain(this.currentMonths)
     this.renderFeature()
@@ -202,7 +186,8 @@ export default class Visor {
           if (this.currentGroup) {
             update
               .transition(t)
-              .attr("fill-opacity", 0.1)
+              .attr("fill-opacity", 0.2)
+              .attr("fill", "#000")
           } else {
             update.call(update => update
               .transition(t)
@@ -272,7 +257,7 @@ export default class Visor {
             .attr("fill", d => this.setColor(d))
             .attr("stroke", d => this.setColor(d))
           )
-          .on("mouseenter", (e, feature) => this.onFeatureMouseenter(e, { feature, months: this.currentMonths }))
+          .on("mouseenter", (e, feature) => this.onFeatureMouseenter(e, { feature, months: this.currentMonths, current: this.currentMonths[this.currentMonthIx] }))
           .on("mouseleave", e => this.onFeatureMouseleave(e, { months: this.currentMonths }))
           .on("click", e => this.onFeatureClick(e, { months: this.currentMonths })),
         update => {
@@ -432,11 +417,19 @@ export default class Visor {
     }
   }
   
-  onTooltipContent({ feature, months: m }) {
-    const months = m.slice(-12) // last year
-    const tr = row => `<tr><td>${formatDate(new Date(row), { month: "short", year: "2-digit" })}</td><td>${percent(getValues(feature)[row]) || "--"}</td></tr>`
+  onTooltipContent({ feature, months: m, current }) {
+    const months = m.slice(-6) // last half year
+    const dateCell = cell => formatDate(new Date(cell), { month: "short", year: "2-digit" })
+    const valueCell = cell => percent(getValues(feature)[cell]) || "--"
+    
+    let ghost = ""
+    if (!months.includes(current)) {
+      ghost = `<tr class="current"><td>${dateCell(current)}</td><td>${valueCell(current)}</td></tr><tr><td colspan="2">...</td></tr>`
+    }
+
+    const tr = (row, current) => `<tr ${current ? "class=\"current\"": ""}><td>${dateCell(row)}</td><td>${valueCell(row)}</td></tr>`
     const caption = `<caption>${getDesc(feature)}</caption>`
-    const thead = `<thead><th>Mes</th><th>%</th></thead>`
-    return `<table>${caption}${thead}<tbody>${months.map(m => tr(m)).join("")}</tbody></table>`
+    const thead = "<thead><th>Mes</th><th>%</th></thead>"
+    return `<table>${caption}${thead}<tbody>${ghost}${months.map(m => tr(m, current === m)).join("")}</tbody></table>`
   }
 }

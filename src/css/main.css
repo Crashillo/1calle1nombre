@@ -14,7 +14,7 @@
     --bg: #b3cde0;
     --color: #003545;
   }
-  
+
   :root[theme="dark"] {
     --bg: #003545;
     --color: #b3cde0;

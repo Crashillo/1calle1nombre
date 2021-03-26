@@ -16,7 +16,6 @@ import RI from "url:../static/RI.topo.json"
 import NC from "url:../static/NC.topo.json"
 import MC from "url:../static/MC.topo.json"
 import ES from "url:../static/ES.topo.json"
-import ESm from "url:../static/ES.municipios.topo.json"
 import ESp from "url:../static/ES.provincias.topo.json"
 
 export const FEATURE_ID = "id"

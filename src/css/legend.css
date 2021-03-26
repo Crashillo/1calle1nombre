@@ -1,7 +1,7 @@
 .legend {
   padding: calc(1 * var(--space));
   display: grid;
-  transition: transform 250ms cubic-bezier(.68,-0.55,.27,1.55);
+  transition: transform 250ms cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
 .legend.hidden {

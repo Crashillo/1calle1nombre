@@ -9,9 +9,13 @@
 
 .tooltip table {
   width: 100%;
-  padding: 0 var(--space);
+  padding: var(--space);
 }
 
 .tooltip td {
   text-align: center;
+}
+
+.tooltip .current {
+  font-weight: bold;
 }

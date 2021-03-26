@@ -37,21 +37,21 @@ export default class Legend {
         update => update
           .selectAll("span")
           .text(d => {
-              const [start, end] = this.scale.invertExtent(d)
-              return `${percent(start)} - ${percent(end)}`
-            })
+            const [start, end] = this.scale.invertExtent(d)
+            return `${percent(start)} - ${percent(end)}`
+          })
       )
 
     //~ legendRanges
-      //~ .append("i")
-      //~ .attr("class", "legend__range-square")
-      //~ .style("background-color", d => d)
+    //~ .append("i")
+    //~ .attr("class", "legend__range-square")
+    //~ .style("background-color", d => d)
 
     //~ legendRanges
-      //~ .append("span")
-      //~ .text(d => {
-      //~ const [start, end] = this.scale.invertExtent(d)
-      //~ return `${percent(start)} - ${percent(end)}`
+    //~ .append("span")
+    //~ .text(d => {
+    //~ const [start, end] = this.scale.invertExtent(d)
+    //~ return `${percent(start)} - ${percent(end)}`
     //~ })
   }
   
