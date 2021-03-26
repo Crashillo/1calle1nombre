@@ -9,7 +9,11 @@
 
 .tooltip table {
   width: 100%;
-  padding: var(--space);
+  padding: 0 var(--space);
+}
+
+.tooltip caption {
+  padding: var(--space) 0;
 }
 
 .tooltip td {

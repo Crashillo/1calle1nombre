@@ -172,7 +172,7 @@ export default class Visor {
             .transition(t)
             .attr("fill", d => this.setColor(d))
           )
-          .on("mouseenter", e => this.onBaseMouseenter(e))
+          .on("mouseenter", (e, feature) => this.onBaseMouseenter(e, { feature, months: this.currentMonths, current: this.currentMonths[this.currentMonthIx] }))
           .on("mouseleave", e => this.onBaseMouseleave(e)),
         update => {
           if (this.currentGroup) {
@@ -252,7 +252,7 @@ export default class Visor {
             .attr("stroke", d => this.setColor(d))
           )
           .on("mouseenter", (e, feature) => this.onFeatureMouseenter(e, { feature, months: this.currentMonths, current: this.currentMonths[this.currentMonthIx] }))
-          .on("mouseleave", e => this.onFeatureMouseleave(e, { months: this.currentMonths }))
+          .on("mouseleave", e => this.onFeatureMouseleave(e))
           .on("click", e => this.onFeatureClick(e, { months: this.currentMonths })),
         update => {
           // reduce the number of transitions
@@ -315,11 +315,13 @@ export default class Visor {
     this.reload(url)
   }
   
-  onBaseMouseenter({ target }) {
-    select(target)
+  onBaseMouseenter(event, data) {
+    select(event.target)
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", "#0dc5c1")
+
+    this.tooltip.show(event, data)
   }
   
   onBaseMouseleave({ target }) {
@@ -327,6 +329,8 @@ export default class Visor {
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", d => this.setColor(d))
+
+    this.tooltip.hide()
   }
   
   onFeatureMouseenter(event, data) {
@@ -341,14 +345,14 @@ export default class Visor {
     this.tooltip.show(event, data)
   }
   
-  onFeatureMouseleave({ target }, { months }) {
+  onFeatureMouseleave({ target }) {
     select(target)
       .attr("stroke-width", 0)
       .attr("stroke", "#000")
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
-      .attr("fill", d => this.colorScale(getValues(d)[months[this.currentMonthIx]] || 0))
-      .attr("stroke", d => this.colorScale(getValues(d)[months[this.currentMonthIx]] || 0))
+      .attr("fill", d => this.setColor(d))
+      .attr("stroke", d => this.setColor(d))
       
     this.tooltip.hide()
   }

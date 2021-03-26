@@ -55,7 +55,7 @@ export default class Slider {
     this.circle
       .transition(t1)
       .attr("cx", index * this.timeScale.step())
-      
+
     this.node
       .selectAll("text")
       .data(months.filter((_, ix) => index === ix), x => x)
