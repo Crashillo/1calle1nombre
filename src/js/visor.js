@@ -77,6 +77,20 @@ export default class Visor {
     this.baseData = feature(features, features.objects[featureProp])
     this.baseLines = mesh(lines, lines.objects[linesProp], (a, b) => a !== b)
 
+    // set the differents month-year tuples
+    this.currentMonths = [
+      ...new Set(
+        this.baseData.features
+          .map(({ properties: { values } }) => Object.keys(values))
+          .flat()
+      ),
+    ].sort()
+
+    // set the most up to date month
+    this.currentMonthIx = this.currentMonths.length - 1
+    
+    this.timeScale.domain(this.currentMonths)
+
     if (!this.controls) {
       this.controls = new Controls(this.sidebar, {
         play: () => this.onPlay(),
@@ -91,26 +105,10 @@ export default class Visor {
         container: this.svg,
         speed: this.INTERVAL_TIME
       })
-    }
 
-    // set the differents month-year tuples
-    this.currentMonths = [
-      ...new Set(
-        this.baseData.features
-          .map(({ properties: { values } }) => Object.keys(values))
-          .flat()
-      ),
-    ].sort()
-    // set the most up to date month
-    this.currentMonthIx = this.currentMonths.length - 1
+      this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
+    }
     
-    const values = this.baseData.features
-      .map(({ properties: { values } }) => Object.values(values))
-      .flat()
-    this.colorScale.domain([ Math.min(...values), Math.max(...values)])
-    this.legend.render()
-    
-    this.timeScale.domain(this.currentMonths)
     this.renderBase()
   }
   
@@ -120,24 +118,12 @@ export default class Visor {
     const [prop] = Object.keys(topojson.objects)
     this.currentFeature = feature(topojson, topojson.objects[prop])
 
-    //~ // set the differents month-year tuples
-    //~ this.currentMonths = [
-    //~ ...new Set(
-    //~ this.currentFeature.features
-    //~ .map(({ properties: { values } }) => Object.keys(values))
-    //~ .flat()
-    //~ ),
-    //~ ].sort()
-    //~ // set the most up to date month
-    //~ this.currentMonthIx = this.currentMonths.length - 1
-    
     const values = this.currentFeature.features
-      .map(({ properties: { values } }) => Object.values(values))
-      .flat()
-    this.colorScale.domain([ Math.min(...values), Math.max(...values)])
+      .flatMap(({ properties: { values } }) => Object.values(values))
+
+    this.colorScale.domain([ Math.max(0, Math.min(...values)), Math.min(1, Math.max(...values)) ])
     this.legend.render()
     
-    this.timeScale.domain(this.currentMonths)
     this.renderFeature()
   }
   
@@ -145,6 +131,12 @@ export default class Visor {
     const ne = [this.width * this.marginBase, this.height * this.marginBase]
     const sw = [this.width * (1 - this.marginBase), this.height * (1 - this.marginBase)]
     this.projection.fitExtent([ne, sw], this.baseData)
+
+    const values = this.baseData.features
+      .flatMap(({ properties: { values } }) => Object.values(values))
+    this.colorScale.domain([ Math.max(0, Math.min(...values)), Math.min(1, Math.max(...values)) ])
+    this.legend.render()
+
     
     const t = transition().duration(this.INTERVAL_TIME * 0.9)
 
@@ -188,12 +180,14 @@ export default class Visor {
               .transition(t)
               .attr("fill-opacity", 0.2)
               .attr("fill", "#000")
+              .style("pointer-events", "none")
           } else {
             update.call(update => update
               .transition(t)
               .attr("d", geoPath(this.projection))
               .attr("fill", d => this.setColor(d))
               .attr("fill-opacity", 1)
+              .style("pointer-events", "auto")
             )
           }
         }
@@ -304,6 +298,7 @@ export default class Visor {
       this.renderBase()
       this.currentFeature = null
       this.renderFeature()
+      this.legend.render()
     }
   }
   
@@ -381,6 +376,7 @@ export default class Visor {
     
     if (this.currentMonthIx === this.currentMonths.length - 1) {
       this.currentMonthIx = 0
+      this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
       this.currentFeature ? this.renderFeature() : this.renderBase()
     }
     
@@ -388,7 +384,7 @@ export default class Visor {
       this.currentMonthIx++
       this.currentFeature ? this.renderFeature() : this.renderBase()
 
-      this.slider.render({ month: this.currentMonthIx, months: this.currentMonths })
+      this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
 
       if (this.currentMonthIx === this.currentMonths.length - 1) {
         this.tick.stop()
@@ -403,7 +399,8 @@ export default class Visor {
       this.tick.stop()
       this.tick = null
     }
-    
+
+    this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
     this.currentFeature ? this.renderFeature() : this.renderBase()
   }
   
@@ -413,7 +410,7 @@ export default class Visor {
     if (ix !== this.currentMonthIx) {
       this.currentMonthIx = ix
       this.currentFeature ? this.renderFeature() : this.renderBase()
-      this.slider.render({ month: this.currentMonthIx, months: this.currentMonths })
+      this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
     }
   }
   

@@ -48,17 +48,17 @@ export default class Slider {
       .style("pointer-events", "none")
   }
   
-  render({ month, months }) {
-    const t1 = transition().duration(this.speed * 0.75)
+  render({ index, months }) {
+    const t1 = transition().duration(this.speed)
     const t2 = transition().duration(this.speed)
 
     this.circle
       .transition(t1)
-      .attr("cx", month * this.timeScale.step())
+      .attr("cx", index * this.timeScale.step())
       
     this.node
       .selectAll("text")
-      .data(months.filter((_, ix) => month === ix), x => x)
+      .data(months.filter((_, ix) => index === ix), x => x)
       .join(
         enter => enter
           .append("text")
