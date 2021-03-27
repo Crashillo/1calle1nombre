@@ -8,8 +8,8 @@ export default class Tooltip {
   }
   
   show({ pageX, pageY }, data) {
-    const x = window.innerWidth / 2 < pageX ? "-110%" : "10%"
-    const y = window.innerHeight / 2 < pageY ? "-110%" : "10%"
+    const x = window.innerWidth / 2 < pageX ? "-125%" : "25%"
+    const y = window.innerHeight / 2 < pageY ? "-125%" : "25%"
     this.tooltip
       .style("opacity", 1)
       .style("top", `${pageY}px`)

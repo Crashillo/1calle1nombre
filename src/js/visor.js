@@ -25,11 +25,6 @@ export default class Visor {
     this.build()
     this.resize()
     
-    this.legend = new Legend(this.sidebar, {
-      range: this.range,
-      colorScale: this.colorScale
-    })
-    
     this.tooltip = new Tooltip(this.map, {
       content: e => this.onTooltipContent(e)
     })
@@ -56,14 +51,13 @@ export default class Visor {
     this.projection = geoConicConformalSpain()
     this.timeScale = scalePoint()
     this.range = schemeGreens[9]
-    this.colorScale = scaleQuantile(this.range).domain([0, 0.99])
+    this.colorScale = scaleQuantile(this.range)
     this.tick = null
     this.INTERVAL_TIME = 1500
     this.marginBase = 0.02
     // variables
-    this.currentMonthIx = 0
-    //~ this.currentFeatureIx = 0
     this.currentGroup = null
+    this.currentCode = null
   }
   
   resize() {
@@ -79,11 +73,7 @@ export default class Visor {
 
     // set the differents month-year tuples
     this.currentMonths = [
-      ...new Set(
-        this.baseData.features
-          .map(({ properties: { values } }) => Object.keys(values))
-          .flat()
-      ),
+      ...new Set(this.baseData.features.flatMap(({ properties: { values } }) => Object.keys(values)))
     ].sort()
 
     // set the most up to date month
@@ -91,6 +81,13 @@ export default class Visor {
     
     this.timeScale.domain(this.currentMonths)
 
+    if (!this.legend) {
+      this.legend = new Legend(this.sidebar, {
+        range: this.range,
+        colorScale: this.colorScale
+      })
+    }
+    
     if (!this.controls) {
       this.controls = new Controls(this.sidebar, {
         play: () => this.onPlay(),
@@ -118,12 +115,6 @@ export default class Visor {
     const [prop] = Object.keys(topojson.objects)
     this.currentFeature = feature(topojson, topojson.objects[prop])
 
-    const values = this.currentFeature.features
-      .flatMap(({ properties: { values } }) => Object.values(values))
-
-    this.colorScale.domain([ Math.max(0, Math.min(...values)), Math.min(1, Math.max(...values)) ])
-    this.legend.render()
-    
     this.renderFeature()
   }
   
@@ -132,12 +123,8 @@ export default class Visor {
     const sw = [this.width * (1 - this.marginBase), this.height * (1 - this.marginBase)]
     this.projection.fitExtent([ne, sw], this.baseData)
 
-    const values = this.baseData.features
-      .flatMap(({ properties: { values } }) => Object.values(values))
-    this.colorScale.domain([ Math.max(0, Math.min(...values)), Math.min(1, Math.max(...values)) ])
-    this.legend.render()
+    this.setLegend(this.baseData.features)
 
-    
     const t = transition().duration(this.INTERVAL_TIME * 0.9)
 
     const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
@@ -207,19 +194,20 @@ export default class Visor {
   renderFeature() {
     this.projection.fitExtent(this.currentSize, this.currentFeature)
 
-    // TODO: esto puede sobrar si no filtramos por provincias
-    //~ const isFeatureActive = d => {
-    //~ const { code } = ELEMENTS[currentFeatureIx]
-    //~ if (!code || !currentGroup) return true
-    //~ return code === getId(d)?.substring(0, 2)
-    //~ }
+    const isFeatureActive = d => {
+      if (!this.currentCode) return true
+      return this.currentCode === getId(d)?.substring(0, 2)
+    }
     
     const t = transition().duration(this.INTERVAL_TIME * 0.9)
 
     if (this.currentFeature) {
+      const subset = this.currentFeature.features.filter(isFeatureActive)
+      this.setLegend(subset)
+    
       const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
         ...this.currentFeature,
-        features: this.currentFeature?.features,
+        features: subset,
       })
 
       this.svg.call(this.z)
@@ -236,7 +224,7 @@ export default class Visor {
 
     this.gFeatures
       .selectAll("path")
-      .data(this.currentFeature ? this.currentFeature.features.map(d => ({ ...d, activated: true })) : [], getId)
+      .data(this.currentFeature ? this.currentFeature.features.map(d => ({ ...d, activated: isFeatureActive(d) })) : [], getId)
       .join(
         enter => enter
           .append("path")
@@ -253,16 +241,17 @@ export default class Visor {
           )
           .on("mouseenter", (e, feature) => this.onFeatureMouseenter(e, { feature, months: this.currentMonths, current: this.currentMonths[this.currentMonthIx] }))
           .on("mouseleave", e => this.onFeatureMouseleave(e))
-          .on("click", e => this.onFeatureClick(e, { months: this.currentMonths })),
+          .on("click", (e, feature) => this.onFeatureClick(e, { feature })),
         update => {
           // reduce the number of transitions
           update.filter(({ activated }) => !activated)
             .attr("d", geoPath(this.projection))
             .attr("fill", "#000")
+            .attr("stroke", "var(--bg)")
             .style("pointer-events", "none")
 
           return update
-            //~ .filter(({ activated }) => !!activated)
+            .filter(({ activated }) => !!activated)
             .filter(d => {
               const [current, previous] = [this.currentMonths[this.currentMonthIx], this.currentMonths[this.currentMonthIx-1]]
               const values = getValues(d)
@@ -282,6 +271,13 @@ export default class Visor {
 
   setColor(feature) {
     return this.colorScale(getValues(feature)[this.currentMonths[this.currentMonthIx]] || 0)
+  }
+
+  setLegend(features) {
+    const values = features.flatMap(({ properties: { values } }) => Object.values(values))
+    const [min, max] = [ Math.max(0, Math.min(...values)), Math.min(0.99, Math.max(...values)) ]
+    this.colorScale.domain([ ...Array.from({ length: this.range.length - 1 }, (_, i) => min + (i * ((max - min) / (this.range.length - 2)))), 1 ])
+    this.legend.render()
   }
   
   onMapClick({ target }) {
@@ -357,7 +353,8 @@ export default class Visor {
     this.tooltip.hide()
   }
   
-  onFeatureClick() {
+  onFeatureClick(_, { feature }) {
+    this.currentCode = getId(feature).substring(0, 2)
     this.renderFeature()
   }
   

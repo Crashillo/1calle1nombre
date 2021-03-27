@@ -9,7 +9,6 @@ export default class Legend {
 
     this.scale = colorScale
     this.range = range
-    this.render()
   }
   
   render() {
@@ -41,18 +40,6 @@ export default class Legend {
             return `${percent(start)} - ${percent(end)}`
           })
       )
-
-    //~ legendRanges
-    //~ .append("i")
-    //~ .attr("class", "legend__range-square")
-    //~ .style("background-color", d => d)
-
-    //~ legendRanges
-    //~ .append("span")
-    //~ .text(d => {
-    //~ const [start, end] = this.scale.invertExtent(d)
-    //~ return `${percent(start)} - ${percent(end)}`
-    //~ })
   }
   
   onClick() {

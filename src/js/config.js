@@ -44,7 +44,6 @@ export const URLS = [
   ]
 ]
 
-// TODO: Quiza sobre
 export const ELEMENTS = [
   {
     value: "Araba/Álava",
