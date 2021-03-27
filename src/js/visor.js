@@ -8,7 +8,7 @@ import { zoom, zoomIdentity } from "d3-zoom"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
 import { percent, getProp, formatDate } from "./helpers"
-import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
+import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC, FEATURE_CODE } from "./config"
 import Legend from "./legend"
 import Controls from "./controls"
 import Slider from "./slider"
@@ -19,6 +19,7 @@ import Theme from "./theme"
 const getId = getProp("properties", FEATURE_ID)
 const getValues = getProp("properties", FEATURE_VALUES)
 const getDesc = getProp("properties", FEATURE_DESC)
+const getCode = getProp("properties", FEATURE_CODE)
 
 export default class Visor {
   constructor() {
@@ -196,7 +197,7 @@ export default class Visor {
 
     const isFeatureActive = d => {
       if (!this.currentCode) return true
-      return this.currentCode === getId(d)?.substring(0, 2)
+      return this.currentCode === getCode(d)
     }
     
     const t = transition().duration(this.INTERVAL_TIME * 0.9)
@@ -355,7 +356,7 @@ export default class Visor {
   }
   
   onFeatureClick(_, { feature }) {
-    this.currentCode = getId(feature).substring(0, 2)
+    this.currentCode = getCode(feature)
     this.renderFeature()
   }
   
