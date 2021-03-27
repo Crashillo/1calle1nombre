@@ -232,6 +232,7 @@ export default class Visor {
           .attr("fill", "#000")
           .attr("stroke", "#000")
           .attr("stroke-alignment", "inner")
+          .attr("cursor", "pointer")
           .style("vector-effect", "non-scaling-stroke")
           .style("pointer-events", "auto")
           .call(enter => enter
@@ -415,19 +416,22 @@ export default class Visor {
     }
   }
   
-  onTooltipContent({ feature, months: m, current }) {
-    const months = m.slice(-6) // last half year
+  onTooltipContent({ feature, months, current }) {
     const dateCell = cell => formatDate(new Date(cell), { month: "short", year: "2-digit" })
     const valueCell = cell => percent(getValues(feature)[cell]) || "--"
-    
-    let ghost = ""
-    if (!months.includes(current)) {
-      ghost = `<tr class="current"><td>${dateCell(current)}</td><td>${valueCell(current)}</td></tr><tr><td colspan="2">...</td></tr>`
-    }
-
-    const tr = (row, current) => `<tr ${current ? "class=\"current\"": ""}><td>${dateCell(row)}</td><td>${valueCell(row)}</td></tr>`
+    const tr = (row, isCurrent) => `<tr ${isCurrent ? "class=\"current\"": ""}><td>${dateCell(row)}</td><td>${valueCell(row)}</td></tr>`
     const caption = `<caption>${getDesc(feature)}</caption>`
     const thead = "<thead><th>Mes</th><th>%</th></thead>"
-    return `<table>${caption}${thead}<tbody>${ghost}${months.map(m => tr(m, current === m)).join("")}</tbody></table>`
+    const ellipsis = "<tr><td colspan=\"2\">...</td></tr>"
+    const table = content => `<table>${caption}${thead}<tbody>${content}</tbody></table>`
+        
+    let content = ""
+    if (!months.slice(-6).includes(current)) {
+      content = `${ellipsis}${tr(current, true)}${ellipsis}${months.slice(-3).map(m => tr(m, current === m)).join("")}`
+    } else {
+      content = months.slice(-6).map(m => tr(m, current === m)).join("")
+    }
+
+    return table(content)
   }
 }

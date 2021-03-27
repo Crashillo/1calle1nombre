@@ -3,6 +3,7 @@ export default class Tooltip {
     this.tooltip = node
       .append("div")
       .attr("class", "tooltip card")
+      .on("click", () => this.hide())
       
     this.content = content
   }

@@ -3,7 +3,6 @@
   position: absolute;
   transition: opacity 250ms;
   z-index: 2;
-  pointer-events: none;
   width: max-content;
 }
 
