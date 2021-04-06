@@ -15,7 +15,7 @@ import IB from "url:../../static/IB.topo.json"
 import RI from "url:../../static/RI.topo.json"
 import NC from "url:../../static/NC.topo.json"
 import MC from "url:../../static/MC.topo.json"
-import ES from "url:../../static/ES.topo.json"
+import ESc from "url:../../static/ES.ccaa.topo.json"
 import ESp from "url:../../static/ES.provincias.topo.json"
 
 export const FEATURE_ID = "id"
@@ -24,7 +24,7 @@ export const FEATURE_DESC = "name"
 export const FEATURE_CODE = "prov"
 
 export const URLS = [
-  [{ url: ES }, { url: ESp }],
+  [{ url: ESc }, { url: ESp }],
   [
     { url: AN, code: "ES-AN" },
     { url: AS, code: "ES-AS" },

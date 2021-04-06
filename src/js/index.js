@@ -9,8 +9,8 @@ if (process.env.BUILD) {
 const viewer = new Viewer()
 
 // init app
-const [[{ url: ccaa }, { url: mun }]] = URLS // ES
+const [[{ url: ccaa }, { url: prov }]] = URLS // ES
 Promise.all([
   fetch(ccaa).then(r => r.json()),
-  fetch(mun).then(r => r.json()),
+  fetch(prov).then(r => r.json()),
 ]).then(([features, lines]) => viewer.load({ features, lines }))
