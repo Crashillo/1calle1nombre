@@ -62,3 +62,14 @@ body {
   box-sizing: border-box;
   pointer-events: auto;
 }
+
+.attribution {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  transform: translateY(-100%);
+  background: #fff;
+  font-size: 0.8em;
+  padding: 2px 4px;
+  border-top-right-radius: 3px;
+}

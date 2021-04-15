@@ -25,16 +25,14 @@ export default class Visor {
   constructor() {
     this.build()
     this.resize()
-    
+
     this.tooltip = new Tooltip(this.map, {
       content: e => this.onTooltipContent(e)
     })
-    
+
     new Theme(this.sidebar)
     
     addEventListener("resize", () => this.onResize())
-    
-    window.yo = this
   }
   
   build() {
@@ -46,6 +44,8 @@ export default class Visor {
     this.gFeatures = this.g.append("g")
     this.gSlider = this.svg.append("g")
     this.sidebar = this.map.append("div").attr("class", "sidebar")
+    this.gAttribution = this.map.append("div").attr("class", "attribution")
+      .html('&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors')
     // common functions
     this.z = zoom().scaleExtent([1, 40])
     this.z.on("zoom", e => this.onZoom(e))
