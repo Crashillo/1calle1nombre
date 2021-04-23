@@ -45,7 +45,7 @@ export default class Visor {
     this.gSlider = this.svg.append("g")
     this.sidebar = this.map.append("div").attr("class", "sidebar")
     this.gAttribution = this.map.append("div").attr("class", "attribution")
-      .html('&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors')
+      .html("&copy; <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors")
     // common functions
     this.z = zoom().scaleExtent([1, 40])
     this.z.on("zoom", e => this.onZoom(e))
@@ -75,7 +75,7 @@ export default class Visor {
     // set the differents month-year tuples
     this.currentMonths = [
       ...new Set(this.baseData.features.flatMap(({ properties: { values } }) => Object.keys(values)))
-    ].sort()
+    ].sort().filter(Boolean)
 
     // set the most up to date month
     this.currentMonthIx = this.currentMonths.length - 1
