@@ -70,7 +70,7 @@ export default class Visor {
     const [featureProp] = Object.keys(features.objects)
     const [linesProp] = Object.keys(lines.objects)
     this.baseData = feature(features, features.objects[featureProp])
-    this.baseLines = mesh(lines, lines.objects[linesProp], (a, b) => a !== b)
+    this.baseLines = mesh(lines, lines.objects[linesProp])
 
     // set the differents month-year tuples
     this.currentMonths = [
@@ -186,8 +186,8 @@ export default class Visor {
       .datum(this.baseLines)
       .attr("d", geoPath(this.projection))
       .attr("fill", "none")
-      .attr("stroke", "var(--bg)")
-      .attr("stroke-width", 0.25)
+      .attr("stroke", "#003545")
+      .attr("stroke-width", 0.5)
       .attr("stroke-linejoin", "round")
       .style("pointer-events", "none")
   }
