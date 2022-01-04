@@ -22,9 +22,12 @@
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
+    "@parcel/optimizer-data-url": "^2.0.1",
+    "@parcel/resolver-glob": "^2.0.1",
+    "@parcel/transformer-inline-string": "^2.0.1",
     "eslint": "^7.26.0",
     "gh-pages": "^3.1.0",
-    "parcel": "^2.0.0-beta.2",
+    "parcel": "^2.0.1",
     "stylelint": "^13.13.1",
     "stylelint-config-standard": "^21.0.0"
   }

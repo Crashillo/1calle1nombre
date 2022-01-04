@@ -15,6 +15,8 @@ import IB from "url:../../static/IB.topo.json"
 import RI from "url:../../static/RI.topo.json"
 import NC from "url:../../static/NC.topo.json"
 import MC from "url:../../static/MC.topo.json"
+import CE from "url:../../static/CE.topo.json"
+import ML from "url:../../static/ML.topo.json"
 import ccaa from "url:../../static/ES.ccaa.topo.json"
 import prov from "url:../../static/ES.prov.topo.json"
 
@@ -42,6 +44,8 @@ export const URLS = [
     { url: IB, code: "ES-IB" },
     { url: RI, code: "ES-RI" },
     { url: NC, code: "ES-NC" },
-    { url: MC, code: "ES-MC" }
+    { url: MC, code: "ES-MC" },
+    { url: CE, code: "ES-CE" },
+    { url: ML, code: "ES-ML" }
   ]
 ]
