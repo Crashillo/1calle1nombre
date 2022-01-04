@@ -8,6 +8,7 @@ import { zoom, zoomIdentity } from "d3-zoom"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
 import { percent, getProp, formatDate } from "./helpers"
+import { infoBtn } from "./icons"
 import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC, FEATURE_CODE } from "./config"
 import Legend from "./legend"
 import Controls from "./controls"
@@ -31,6 +32,15 @@ export default class Visor {
     })
 
     new Theme(this.sidebar)
+
+    this.sidebar
+      .append("div")
+      .attr("class", "info card")
+      .append("a")
+      .attr("class", "control__button")
+      .attr("href", "https://wiki.openstreetmap.org/wiki/ES:Espa%C3%B1a/1Calle1Nombre")
+      .attr("target", "_blank")
+      .html(infoBtn)
     
     addEventListener("resize", () => this.onResize())
   }

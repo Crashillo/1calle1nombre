@@ -25,7 +25,7 @@ body {
   z-index: 2;
   display: grid;
   grid-gap: var(--space);
-  grid-template-areas: "theme controls legend";
+  grid-template-areas: "info theme controls legend";
   pointer-events: none;
 }
 
@@ -34,7 +34,8 @@ body {
     grid-template-areas:
       "legend"
       "controls"
-      "theme";
+      "theme"
+      "info";
   }
 }
 
@@ -46,11 +47,17 @@ body {
 .sidebar .controls {
   grid-area: controls;
   justify-self: flex-end;
-  align-self: baseline;
+  align-self: flex-start;
 }
 
 .sidebar .theme {
   grid-area: theme;
+  justify-self: flex-end;
+  align-self: baseline;
+}
+
+.sidebar .info {
+  grid-area: info;
   justify-self: flex-end;
   align-self: baseline;
 }
