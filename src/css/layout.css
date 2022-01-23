@@ -68,6 +68,7 @@ body {
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.75);
   box-sizing: border-box;
   pointer-events: auto;
+  color: var(--bg);
 }
 
 .attribution {
@@ -75,8 +76,6 @@ body {
   top: 100%;
   left: 0;
   transform: translateY(-100%);
-  background: #fff;
   font-size: 0.8em;
   padding: 2px 4px;
-  border-top-right-radius: 3px;
 }
