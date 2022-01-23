@@ -1,5 +1,5 @@
 import { select } from "d3-selection"
-import { stopBtn, playBtn } from "./icons"
+import { stopBtn, playBtn, pauseBtn } from "./icons"
 
 export default class Controls {
   constructor(node, { play, stop }) {
