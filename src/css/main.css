@@ -1,3 +1,8 @@
+@import "./layout.css";
+@import "./tooltip.css";
+@import "./legend.css";
+@import "./controls.css";
+
 :root {
   --bg: #003545;
   --color: #f0f0f0;
@@ -22,8 +27,3 @@
     --color: #f0f0f0;
   }
 }
-
-@import "./layout.css";
-@import "./tooltip.css";
-@import "./legend.css";
-@import "./controls.css";
