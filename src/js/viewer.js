@@ -37,7 +37,7 @@ export default class Visor {
       .append("div")
       .attr("class", "info card")
       .append("a")
-      .attr("class", "control__button")
+      .attr("class", "control-button")
       .attr("href", "https://wiki.openstreetmap.org/wiki/ES:Espa%C3%B1a/1Calle1Nombre")
       .attr("target", "_blank")
       .html(infoBtn)

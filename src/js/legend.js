@@ -13,17 +13,17 @@ export default class Legend {
   
   render() {
     this.container
-      .selectAll(".legend__range")
+      .selectAll(".legend-range")
       .data(this.range)
       .join(
         enter => {
           const legendRanges = enter
             .append("div")
-            .attr("class", "legend__range")
+            .attr("class", "legend-range")
           
           legendRanges
             .append("i")
-            .attr("class", "legend__range-square")
+            .attr("class", "legend-range-square")
             .style("background-color", d => d)
             
           legendRanges

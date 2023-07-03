@@ -17,7 +17,7 @@ export default class Theme {
       .append("div")
       .attr("class", "theme card")
       .append("button")
-      .attr("class", "control__button")
+      .attr("class", "control-button")
       .on("click", e => this.onClick(e))
       .html(currentTheme
         ? currentTheme === "light"

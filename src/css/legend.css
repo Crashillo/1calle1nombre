@@ -8,24 +8,24 @@
   transform: translateY(-80%);
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .legend.hidden {
     transform: none;
   }
 }
 
-.legend__range {
+.legend-range {
   display: flex;
   align-items: center;
   pointer-events: none;
   color: #000;
 }
 
-.legend__range:not(:last-child) {
+.legend-range:not(:last-child) {
   margin-bottom: calc(0.25 * var(--space));
 }
 
-.legend__range-square {
+.legend-range-square {
   width: 1rem;
   height: 1rem;
   margin-right: calc(0.5 * var(--space));

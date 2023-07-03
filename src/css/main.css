@@ -1,7 +1,7 @@
-@import "./layout.css";
-@import "./tooltip.css";
-@import "./legend.css";
-@import "./controls.css";
+@import url("./layout.css");
+@import url("./tooltip.css");
+@import url("./legend.css");
+@import url("./controls.css");
 
 :root {
   --bg: #003545;

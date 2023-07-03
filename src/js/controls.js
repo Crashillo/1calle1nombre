@@ -10,7 +10,7 @@ export default class Controls {
       .data(["stop", "play"])
       .join("button")
       .attr("id", d => d)
-      .attr("class", "control__button")
+      .attr("class", "control-button")
       .on("click", e => this.onButtonClick(e))
       .html(d => d === "stop" ? stopBtn : playBtn)
       
