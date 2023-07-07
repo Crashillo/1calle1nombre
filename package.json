@@ -28,7 +28,7 @@
     "eslint": "^8.44.0",
     "gh-pages": "^5.0.0",
     "parcel": "^2.9.3",
-    "stylelint": "^15.9.0",
+    "stylelint": "^15.10.1",
     "stylelint-config-standard": "^33.0.0"
   }
 }
