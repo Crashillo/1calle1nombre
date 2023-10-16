@@ -287,7 +287,8 @@ export default class Visor {
 
   setLegend(features) {
     const values = features.flatMap(({ properties: { values } }) => Object.values(values))
-    const [min, max] = [ Math.max(0, Math.min(...values)), Math.min(0.99, Math.max(...values)) ]
+    const uniqueValues = Array.from(new Set(values))
+    const [min, max] = [ Math.max(0, Math.min(...uniqueValues)), Math.min(0.99, Math.max(...uniqueValues)) ]
     this.colorScale.domain([ ...Array.from({ length: this.range.length - 1 }, (_, i) => min + (i * ((max - min) / (this.range.length - 2)))), 1 ])
     this.legend.render()
   }
