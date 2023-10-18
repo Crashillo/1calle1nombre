@@ -13,7 +13,7 @@
   background: #fafafa;
   transition: background 250ms;
   outline: 0;
-  color: var(--bg);
+  color: #003545;
 }
 
 .control-button:hover {
