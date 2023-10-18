@@ -41,10 +41,10 @@ export default class Visor {
       .attr("href", "https://wiki.openstreetmap.org/wiki/ES:Espa%C3%B1a/1Calle1Nombre")
       .attr("target", "_blank")
       .html(infoBtn)
-    
+
     addEventListener("resize", () => this.onResize())
   }
-  
+
   build() {
     // static elements
     this.map = select("#map")
@@ -70,7 +70,7 @@ export default class Visor {
     this.currentGroup = null
     this.currentCode = null
   }
-  
+
   resize() {
     ({ width: this.width, height: this.height } = this.map.node().getBoundingClientRect())
     this.svg.attr("viewBox", [0, 0, this.width, this.height])
@@ -89,7 +89,7 @@ export default class Visor {
 
     // set the most up to date month
     this.currentMonthIx = this.currentMonths.length - 1
-    
+
     this.timeScale.domain(this.currentMonths)
 
     if (!this.legend) {
@@ -98,14 +98,14 @@ export default class Visor {
         colorScale: this.colorScale
       })
     }
-    
+
     if (!this.controls) {
       this.controls = new Controls(this.sidebar, {
         play: () => this.onPlay(),
         stop: () => this.onStop()
       })
     }
-    
+
     if (!this.slider) {
       this.slider = new Slider(this.gSlider, {
         drag: e => this.onDrag(e),
@@ -116,10 +116,10 @@ export default class Visor {
 
       this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
     }
-    
+
     this.renderBase()
   }
-  
+
   async reload(url) {
     const blob = await fetch(url)
     const topojson = await blob.json()
@@ -128,7 +128,7 @@ export default class Visor {
 
     this.renderFeature()
   }
-  
+
   renderBase() {
     const ne = [this.width * this.marginBase, this.height * this.marginBase]
     const sw = [this.width * (1 - this.marginBase), this.height * (1 - this.marginBase)]
@@ -142,7 +142,7 @@ export default class Visor {
       ...this.baseData,
       features: this.baseData.features.filter(d => !this.currentGroup || getId(d) === this.currentGroup),
     })
-    
+
     this.currentSize = [[x0, y0], [x1, y1]]
 
     this.svg.call(this.z)
@@ -190,7 +190,7 @@ export default class Visor {
           }
         }
       )
-      
+
     this.gBase
       .append("path")
       .datum(this.baseLines)
@@ -201,7 +201,7 @@ export default class Visor {
       .attr("stroke-linejoin", "round")
       .style("pointer-events", "none")
   }
-  
+
   renderFeature() {
     this.projection.fitExtent(this.currentSize, this.currentFeature)
 
@@ -209,13 +209,13 @@ export default class Visor {
       if (!this.currentCode) return true
       return this.currentCode === getCode(d)
     }
-    
+
     const t = transition().duration(this.INTERVAL_TIME * 0.9)
 
     if (this.currentFeature) {
       const subset = this.currentFeature.features.filter(isFeatureActive)
       this.setLegend(subset)
-    
+
       const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
         ...this.currentFeature,
         features: subset,
@@ -265,7 +265,7 @@ export default class Visor {
           return update
             .filter(({ activated }) => !!activated)
             .filter(d => {
-              const [current, previous] = [this.currentMonths[this.currentMonthIx], this.currentMonths[this.currentMonthIx-1]]
+              const [current, previous] = [this.currentMonths[this.currentMonthIx], this.currentMonths[this.currentMonthIx - 1]]
               const values = getValues(d)
 
               return values[current] !== values[previous]
@@ -281,18 +281,30 @@ export default class Visor {
       )
   }
 
+  getClosestValue({ feature, months, i }) {
+    let match = undefined
+
+    while (i >= 0) {
+      match = getValues(feature)[months[i]]
+      if (match) break
+      i--
+    }
+
+    return match
+  }
+
   setColor(feature) {
-    return this.colorScale(getValues(feature)[this.currentMonths[this.currentMonthIx]] || 0)
+    return this.colorScale(this.getClosestValue({ feature, months: this.currentMonths, i: this.currentMonthIx }) || 0)
   }
 
   setLegend(features) {
     const values = features.flatMap(({ properties: { values } }) => Object.values(values))
     const uniqueValues = Array.from(new Set(values))
-    const [min, max] = [ Math.max(0, Math.min(...uniqueValues)), Math.min(0.99, Math.max(...uniqueValues)) ]
-    this.colorScale.domain([ ...Array.from({ length: this.range.length - 1 }, (_, i) => min + (i * ((max - min) / (this.range.length - 2)))), 1 ])
+    const [min, max] = [Math.max(0, Math.min(...uniqueValues)), Math.min(0.99, Math.max(...uniqueValues))]
+    this.colorScale.domain([...Array.from({ length: this.range.length - 1 }, (_, i) => min + (i * ((max - min) / (this.range.length - 2)))), 1])
     this.legend.render()
   }
-  
+
   onMapClick({ target }) {
     if (this.svg.node() === target) {
       this.svg
@@ -310,11 +322,11 @@ export default class Visor {
       this.legend.render()
     }
   }
-  
+
   onZoom({ transform }) {
     this.g.attr("transform", transform)
   }
-  
+
   onBaseClick(feature) {
     // search in 2nd array
     const { url, code } = URLS[1].find(x => x.code === getId(feature))
@@ -323,7 +335,7 @@ export default class Visor {
     this.renderBase()
     this.reload(url)
   }
-  
+
   onBaseMouseenter(event, data) {
     select(event.target)
       .transition("mouse")
@@ -332,7 +344,7 @@ export default class Visor {
 
     this.tooltip.show(event, data)
   }
-  
+
   onBaseMouseleave({ target }) {
     select(target)
       .transition("mouse")
@@ -341,7 +353,7 @@ export default class Visor {
 
     this.tooltip.hide()
   }
-  
+
   onFeatureMouseenter(event, data) {
     select(event.target)
       .raise()
@@ -353,7 +365,7 @@ export default class Visor {
 
     this.tooltip.show(event, data)
   }
-  
+
   onFeatureMouseleave({ target }) {
     select(target)
       .attr("stroke-width", 0)
@@ -362,15 +374,15 @@ export default class Visor {
       .duration(this.INTERVAL_TIME / 4)
       .attr("fill", d => this.setColor(d))
       .attr("stroke", d => this.setColor(d))
-      
+
     this.tooltip.hide()
   }
-  
+
   onFeatureClick(_, { feature }) {
     this.currentCode = getCode(feature)
     this.renderFeature()
   }
-  
+
   onResize() {
     this.resize()
     this.renderBase()
@@ -378,7 +390,7 @@ export default class Visor {
       this.renderFeature()
     }
   }
-  
+
   onPlay() {
     // click in play while was running
     if (this.tick !== null) {
@@ -387,13 +399,13 @@ export default class Visor {
       this.controls.stop()
       return
     }
-    
+
     if (this.currentMonthIx === this.currentMonths.length - 1) {
       this.currentMonthIx = 0
       this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
       this.currentFeature ? this.renderFeature() : this.renderBase()
     }
-    
+
     this.tick = interval(() => {
       this.currentMonthIx++
       this.currentFeature ? this.renderFeature() : this.renderBase()
@@ -406,7 +418,7 @@ export default class Visor {
       }
     }, this.INTERVAL_TIME)
   }
-  
+
   onStop() {
     this.currentMonthIx = this.currentMonths.length - 1
     if (this.tick !== null) {
@@ -417,7 +429,7 @@ export default class Visor {
     this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
     this.currentFeature ? this.renderFeature() : this.renderBase()
   }
-  
+
   onDrag(x) {
     const ix = Math.max(0, Math.min(Math.floor(x / this.timeScale.step()), this.currentMonths.length - 1))
 
@@ -427,16 +439,16 @@ export default class Visor {
       this.slider.render({ index: this.currentMonthIx, months: this.currentMonths })
     }
   }
-  
+
   onTooltipContent({ feature, months, current }) {
     const dateCell = cell => formatDate(new Date(cell), { month: "short", year: "2-digit" })
-    const valueCell = cell => percent(getValues(feature)[cell]) || "--"
-    const tr = (row, isCurrent) => `<tr ${isCurrent ? "class=\"current\"": ""}><td>${dateCell(row)}</td><td>${valueCell(row)}</td></tr>`
+    const valueCell = cell => percent(this.getClosestValue({ feature, months, i: months.indexOf(cell) })) || "--"
+    const tr = (row, isCurrent) => `<tr ${isCurrent ? "class=\"current\"" : ""}><td>${dateCell(row)}</td><td>${valueCell(row)}</td></tr>`
     const caption = `<caption>${getDesc(feature)}</caption>`
     const thead = "<thead><th>Mes</th><th>%</th></thead>"
     const ellipsis = "<tr><td colspan=\"2\">...</td></tr>"
     const table = content => `<table>${caption}${thead}<tbody>${content}</tbody></table>`
-        
+
     let content = ""
     if (!months.slice(-6).includes(current)) {
       content = `${ellipsis}${tr(current, true)}${ellipsis}${months.slice(-3).map(m => tr(m, current === m)).join("")}`
