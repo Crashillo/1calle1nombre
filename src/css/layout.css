@@ -46,20 +46,17 @@ body {
 
 .sidebar .controls {
   grid-area: controls;
-  justify-self: flex-end;
-  align-self: flex-start;
+  place-self: flex-start flex-end;
 }
 
 .sidebar .theme {
   grid-area: theme;
-  justify-self: flex-end;
-  align-self: baseline;
+  place-self: baseline flex-end;
 }
 
 .sidebar .info {
   grid-area: info;
-  justify-self: flex-end;
-  align-self: baseline;
+  place-self: baseline flex-end;
 }
 
 .card {
