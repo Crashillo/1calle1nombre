@@ -87,6 +87,13 @@ export default class Visor {
       ...new Set(this.baseData.features.flatMap(({ properties: { values } }) => Object.keys(values)))
     ].sort().filter(Boolean)
 
+    // in case no changes were made for the current month
+    const yyyymm = new Date().toISOString().slice(0, 7)
+    if (!this.currentMonths.includes(`${yyyymm}-01`)) {
+      console.info("No changes for the current month, pushed manually");
+      this.currentMonths.push(`${yyyymm}-01`)
+    }
+
     // set the most up to date month
     this.currentMonthIx = this.currentMonths.length - 1
 
