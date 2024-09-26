@@ -4,6 +4,8 @@
   transition: opacity 250ms;
   z-index: 2;
   width: max-content;
+  top: var(--space);
+  left: var(--space);
 }
 
 .tooltip table {

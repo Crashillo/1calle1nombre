@@ -25,38 +25,16 @@ body {
   z-index: 2;
   display: grid;
   grid-gap: var(--space);
-  grid-template-areas: "info theme controls legend";
   pointer-events: none;
-}
-
-@media (width >= 768px) {
-  .sidebar {
-    grid-template-areas:
-      "legend"
-      "controls"
-      "theme"
-      "info";
-  }
+  grid: initial;
 }
 
 .sidebar .legend {
-  grid-area: legend;
-  justify-self: flex-end;
+  grid-area: 1 / 3 / 5 / 5;
 }
 
 .sidebar .controls {
-  grid-area: controls;
-  place-self: flex-start flex-end;
-}
-
-.sidebar .theme {
-  grid-area: theme;
-  place-self: baseline flex-end;
-}
-
-.sidebar .info {
-  grid-area: info;
-  place-self: baseline flex-end;
+  grid-area: 2 / 1 / 3 / 3;
 }
 
 .card {

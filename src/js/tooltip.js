@@ -13,9 +13,6 @@ export default class Tooltip {
     const y = window.innerHeight / 2 < pageY ? "-125%" : "25%"
     this.tooltip
       .style("opacity", 1)
-      .style("top", `${pageY}px`)
-      .style("left", `${pageX}px`)
-      .style("transform", `translate(${x}, ${y})`)
       .html(this.content(data))
   }
   
