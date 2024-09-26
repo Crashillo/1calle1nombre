@@ -8,9 +8,7 @@ export default class Tooltip {
     this.content = content
   }
   
-  show({ pageX, pageY }, data) {
-    const x = window.innerWidth / 2 < pageX ? "-125%" : "25%"
-    const y = window.innerHeight / 2 < pageY ? "-125%" : "25%"
+  show(_, data) {
     this.tooltip
       .style("opacity", 1)
       .html(this.content(data))
