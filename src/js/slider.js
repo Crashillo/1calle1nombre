@@ -1,5 +1,4 @@
-import { drag } from "d3-drag"
-import { transition } from "d3-transition"
+import { drag, transition } from "d3"
 import { formatDate } from "./helpers"
 
 export default class Slider {

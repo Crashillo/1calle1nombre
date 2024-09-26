@@ -1,4 +1,4 @@
-import { select } from "d3-selection"
+import { select } from "d3"
 import { stopBtn, playBtn, pauseBtn } from "./icons"
 
 export default class Controls {
