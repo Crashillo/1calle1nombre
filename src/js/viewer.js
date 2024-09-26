@@ -17,7 +17,9 @@ const getDesc = getProp("properties", FEATURE_DESC)
 const getCode = getProp("properties", FEATURE_CODE)
 
 export default class Visor {
-  constructor() {
+  constructor(props) {
+    this.props = props
+
     this.build()
     this.resize()
 
@@ -82,12 +84,12 @@ export default class Visor {
     ].sort().filter(Boolean)
 
     // in case no changes were made for the current month
-    const yyyymm = new Date().toISOString().slice(0, 7)
+    const yyyymm = this.props.build.slice(0, 7)
     if (!this.currentMonths.includes(`${yyyymm}-01`)) {
       console.info("No changes for the current month, pushed manually")
       this.currentMonths.push(`${yyyymm}-01`)
     }
-
+    
     // set the most up to date month
     this.currentMonthIx = this.currentMonths.length - 1
 

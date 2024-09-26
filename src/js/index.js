@@ -2,11 +2,10 @@
 import Viewer from "./viewer"
 import { URLS } from "./config"
 
-if (process.env.BUILD) {
-  console.info(`Last build: ${new Date(process.env.BUILD * 1e3).toISOString()}`)
-}
+const build = new Date(process.env.BUILD * 1e3 || null).toISOString()
+console.info(`Last build: ${build}`)
 
-const viewer = new Viewer()
+const viewer = new Viewer({ build })
 
 // init app
 const [[{ url: ccaa }, { url: prov }]] = URLS // ES
