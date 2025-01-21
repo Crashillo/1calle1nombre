@@ -1,7 +1,7 @@
-import { geoPath, select, interval, transition, scaleQuantile, scalePoint, schemeGreens, zoom, zoomIdentity } from "d3"
+import { geoPath, select, extent, interval, transition, scaleQuantile, timeMonth, scalePoint, schemeGreens, zoom, zoomIdentity } from "d3"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
-import { percent, getProp, formatDate } from "./helpers"
+import { percent, getProp, formatDate, getMonthRange } from "./helpers"
 import { infoBtn } from "./icons"
 import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC, FEATURE_CODE } from "./config"
 import Legend from "./legend"
@@ -23,6 +23,7 @@ export default class Visor {
     this.build()
     this.resize()
 
+    // TODO: se ejecuta muy a menudo, intentar debounce o algo así
     this.tooltip = new Tooltip(this.map, {
       content: e => this.onTooltipContent(e)
     })
@@ -60,11 +61,13 @@ export default class Visor {
     this.range = schemeGreens[9]
     this.colorScale = scaleQuantile(this.range)
     this.tick = null
-    this.INTERVAL_TIME = 1500
+    this.INTERVAL_TIME = 1000
     this.marginBase = 0.02
     // variables
     this.currentGroup = null
     this.currentCode = null
+    // performance
+    this.urlCached = new Map()
   }
 
   resize() {
@@ -78,10 +81,9 @@ export default class Visor {
     this.baseData = feature(features, features.objects[featureProp])
     this.baseLines = mesh(lines, lines.objects[linesProp])
 
-    // set the differents month-year tuples
-    this.currentMonths = [
-      ...new Set(this.baseData.features.flatMap(({ properties: { values } }) => Object.keys(values)))
-    ].sort().filter(Boolean)
+    // set all possible month-year dates, from the earliest date
+    const [a, b] = extent(this.baseData.features.flatMap(({ properties: { values } }) => Object.keys(values)))
+    this.currentMonths = getMonthRange(a, b).map(x => x.toISOString().substring(0, 10))
 
     // in case no changes were made for the current month
     const yyyymm = this.props.build.slice(0, 7)
@@ -124,10 +126,17 @@ export default class Visor {
   }
 
   async reload(url) {
-    const blob = await fetch(url)
-    const topojson = await blob.json()
-    const [prop] = Object.keys(topojson.objects)
-    this.currentFeature = feature(topojson, topojson.objects[prop])
+    if (!this.urlCached.has(url)) {
+      const blob = await fetch(url)
+      const topojson = await blob.json()
+      const [prop] = Object.keys(topojson.objects)
+  
+      this.currentFeature = feature(topojson, topojson.objects[prop])
+
+      this.urlCached.set(url, this.currentFeature)
+    } else {
+      this.currentFeature = this.urlCached.get(url)
+    }
 
     this.renderFeature()
   }
@@ -287,12 +296,12 @@ export default class Visor {
   getClosestValue({ feature, months, i }) {
     let match = undefined
 
+    // TODO: "memoizar" esta función
     while (i >= 0) {
       match = getValues(feature)[months[i]]
       if (match) break
       i--
     }
-
     return match
   }
 
