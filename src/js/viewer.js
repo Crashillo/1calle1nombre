@@ -1,4 +1,4 @@
-import { geoPath, select, extent, interval, transition, scaleQuantile, timeMonth, scalePoint, schemeGreens, zoom, zoomIdentity } from "d3"
+import { geoPath, select, extent, interval, transition, scaleQuantile, scalePoint, schemeGreens, zoom, zoomIdentity } from "d3"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
 import { percent, getProp, formatDate, getMonthRange } from "./helpers"
@@ -23,9 +23,18 @@ export default class Visor {
     this.build()
     this.resize()
 
-    // TODO: se ejecuta muy a menudo, intentar debounce o algo así
     this.tooltip = new Tooltip(this.map, {
-      content: e => this.onTooltipContent(e)
+      content: e => {
+        const key = [e.feature.properties.name, e.current].join("--")
+        if (this.tooltipCached.has(key)) {
+          return this.tooltipCached.get(key)
+        }
+
+        const tooltip = this.onTooltipContent(e)
+        this.tooltipCached.set(key, tooltip)
+
+        return tooltip
+      }
     })
 
     new Theme(this.sidebar)
@@ -68,6 +77,7 @@ export default class Visor {
     this.currentCode = null
     // performance
     this.urlCached = new Map()
+    this.tooltipCached = new Map()
   }
 
   resize() {
@@ -296,12 +306,12 @@ export default class Visor {
   getClosestValue({ feature, months, i }) {
     let match = undefined
 
-    // TODO: "memoizar" esta función
     while (i >= 0) {
       match = getValues(feature)[months[i]]
       if (match) break
       i--
     }
+    
     return match
   }
 
