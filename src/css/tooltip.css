@@ -11,6 +11,13 @@
 .tooltip table {
   width: 100%;
   padding: 0 var(--space);
+  color: #000;
+}
+
+@media (width >= 768px) {
+  .tooltip table {
+    font-size: x-large;
+  }
 }
 
 .tooltip caption {
