@@ -29,7 +29,7 @@ export default class Legend {
           legendRanges
             .append("span")
             .text(d => {
-              const [start, end] = this.scale.invertExtent(d)
+              const [start = 0, end] = this.scale.invertExtent(d)
               return `${percent(start)} - ${percent(end)}`
             })
         },
