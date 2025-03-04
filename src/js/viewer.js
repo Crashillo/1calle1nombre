@@ -3,7 +3,7 @@ import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
 import { percent, getProp, formatDate, getMonthRange } from "./helpers"
 import { infoBtn } from "./icons"
-import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC, FEATURE_CODE } from "./config"
+import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
 import Legend from "./legend"
 import Controls from "./controls"
 import Slider from "./slider"
@@ -14,7 +14,6 @@ import Theme from "./theme"
 const getId = getProp("properties", FEATURE_ID)
 const getValues = getProp("properties", FEATURE_VALUES)
 const getDesc = getProp("properties", FEATURE_DESC)
-const getCode = getProp("properties", FEATURE_CODE)
 
 export default class Visor {
   constructor(props) {
@@ -60,6 +59,7 @@ export default class Visor {
     this.sidebar = this.map.append("div").attr("class", "sidebar")
     this.gAttribution = this.map.append("div").attr("class", "attribution")
       .html("&copy; <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors")
+    
     // common functions
     this.z = zoom().scaleExtent([1, 40])
     this.z.on("zoom", e => this.onZoom(e))
@@ -70,8 +70,7 @@ export default class Visor {
     this.tick = null
     this.INTERVAL_TIME = 500
     this.MARGIN_BASE = 0.02
-    // variables
-    this.currentCode = null
+
     // performance
     this.urlCached = new Map()
     this.tooltipCached = new Map()
@@ -162,18 +161,12 @@ export default class Visor {
 
     this.projection.fitExtent([ne, sw], this.currentFeature)
 
-    const isFeatureActive = d => {
-      if (!this.currentCode) return true
-      return this.currentCode === getCode(d)
-    }
-
     const t = transition().duration(this.INTERVAL_TIME * 0.9)
 
     if (this.currentFeature) {
-      const subset = this.currentFeature.features.filter(isFeatureActive)
       const [[x0, y0], [x1, y1]] = geoPath(this.projection).bounds({
         ...this.currentFeature,
-        features: subset,
+        features: this.currentFeature.features,
       })
 
       this.svg.call(this.z)
@@ -304,13 +297,9 @@ export default class Visor {
 
   onMouseenter(event, data) {
     select(event.target)
-      // .raise()
-      // .attr("stroke-width", 3)
       .transition("mouse")
       .duration(this.INTERVAL_TIME / 4)
-      // .attr("fill", "#0dc5c1")
       .attr("fill", "var(--heading)")
-    // .attr("stroke", "var(--bg)")
 
     this.tooltip.show(event, data)
   }

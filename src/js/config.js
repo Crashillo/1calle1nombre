@@ -75,11 +75,10 @@ import ES from "url:../../static/ES.ccaa.topo.json"
 export const FEATURE_ID = "id"
 export const FEATURE_VALUES = "values"
 export const FEATURE_DESC = "name"
-export const FEATURE_CODE = "prov"
 
 export const URLS = [
   { url: ES },
-  //
+  // ccaa
   { url: AN, code: "ES-AN" },
   { url: O, code: "ES-AS" },
   { url: AR, code: "ES-AR" },
@@ -99,7 +98,7 @@ export const URLS = [
   { url: MU, code: "ES-MC" },
   { url: CE, code: "ES-CE" },
   { url: ML, code: "ES-ML" },
-  //
+  // prov
   { url: A, code: "ES-A" },
   { url: AB, code: "ES-AB" },
   { url: AL, code: "ES-AL" },
