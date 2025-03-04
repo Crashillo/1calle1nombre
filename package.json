@@ -22,14 +22,17 @@
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.0",
+    "@eslint/js": "^9.21.0",
     "@parcel/optimizer-data-url": "^2.10.0",
     "@parcel/resolver-glob": "^2.10.0",
     "@parcel/transformer-inline-string": "^2.10.0",
-    "eslint": "^8.51.0",
-    "gh-pages": "^5.0.0",
+    "eslint": "^9.21.0",
+    "gh-pages": "^6.3.0",
+    "globals": "^16.0.0",
     "parcel": "^2.10.0",
-    "stylelint": "^15.11.0",
-    "stylelint-config-standard": "^33.0.0"
+    "stylelint": "^16.15.0",
+    "stylelint-config-standard": "^37.0.0"
   },
   "alias": {
     "d3": "d3/dist/d3.js"
