@@ -10,10 +10,10 @@
   width: calc(2rem + var(--space));
   height: calc(2rem + var(--space));
   border: 0;
-  background: #fafafa;
+  background: var(--color);
   transition: background 250ms;
   outline: 0;
-  color: #003545;
+  color: var(--bg);
 }
 
 .control-button:hover {
@@ -34,4 +34,5 @@
   pointer-events: none;
   width: 100%;
   height: 100%;
+  font-size: 2rem;
 }
