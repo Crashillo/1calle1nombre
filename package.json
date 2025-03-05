@@ -1,6 +1,6 @@
 {
   "name": "1calle1nombre",
-  "version": "1.1.7",
+  "version": "1.2.0",
   "description": "Visor #1calle1nombre",
   "scripts": {
     "start": "BUILD=$(date +%s) parcel serve './src/**/*.html' --open",
