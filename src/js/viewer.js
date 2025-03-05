@@ -203,13 +203,6 @@ export default class Visor {
           .on("mouseleave", e => this.onMouseleave(e))
           .on("click", (_, d) => this.onFeatureClick(d)),
         update => update
-          // do not update if there's no gonna get changes
-          .filter(d => {
-            const [current, previous] = [this.currentMonths[this.currentMonthIx], this.currentMonths[this.currentMonthIx - 1]]
-            const values = getValues(d)
-
-            return values[current] !== values[previous]
-          })
           .call(update => update
             .transition(t)
             .attr("d", geoPath(this.projection))
