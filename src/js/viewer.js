@@ -2,13 +2,12 @@ import { geoPath, select, extent, interval, transition, scaleThreshold, scalePoi
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
 import { percent, getProp, formatDate, getMonthRange } from "./helpers"
-import { infoBtn } from "./icons"
+import { infoBtn, githubBtn } from "./icons"
 import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
 import Legend from "./legend"
 import Controls from "./controls"
 import Slider from "./slider"
 import Tooltip from "./tooltip"
-import Theme from "./theme"
 
 // helpers
 const getId = getProp("properties", FEATURE_ID)
@@ -36,7 +35,14 @@ export default class Visor {
       }
     })
 
-    new Theme(this.sidebar)
+    this.sidebar
+      .append("div")
+      .attr("class", "info card")
+      .append("a")
+      .attr("class", "control-button")
+      .attr("href", "https://github.com/Crashillo/1calle1nombre")
+      .attr("target", "_blank")
+      .html(githubBtn)
 
     this.sidebar
       .append("div")
