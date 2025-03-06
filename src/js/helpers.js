@@ -1,3 +1,5 @@
+import { FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
+
 export const percent = (num) =>
   num?.toLocaleString(undefined, { style: "percent" })
 export const formatDate = (date, opts = {}) =>
@@ -27,4 +29,18 @@ export const getMonthRange = (startDate, endDate) => {
   }
 
   return monthRange
+}
+export const getId = getProp("properties", FEATURE_ID)
+export const getValues = getProp("properties", FEATURE_VALUES)
+export const getDesc = getProp("properties", FEATURE_DESC)
+export const getClosestValue = ({ feature, months, i }) => {
+  let match = undefined
+
+  while (i >= 0) {
+    match = getValues(feature)[months[i]]
+    if (match) break
+    i--
+  }
+
+  return match
 }

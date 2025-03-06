@@ -1,18 +1,13 @@
 import { geoPath, select, extent, interval, transition, scaleThreshold, scalePoint, schemeGreens, zoom, zoomIdentity } from "d3"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
-import { percent, getProp, formatDate, getMonthRange } from "./helpers"
+import { percent, formatDate, getMonthRange, getId, getDesc, getValues, getClosestValue } from "./helpers"
 import { infoBtn, githubBtn } from "./icons"
-import { URLS, FEATURE_ID, FEATURE_VALUES, FEATURE_DESC } from "./config"
+import { URLS } from "./config"
 import Legend from "./legend"
 import Controls from "./controls"
 import Slider from "./slider"
 import Tooltip from "./tooltip"
-
-// helpers
-const getId = getProp("properties", FEATURE_ID)
-const getValues = getProp("properties", FEATURE_VALUES)
-const getDesc = getProp("properties", FEATURE_DESC)
 
 export default class Visor {
   constructor(props) {
@@ -65,7 +60,7 @@ export default class Visor {
     this.sidebar = this.map.append("div").attr("class", "sidebar")
     this.gAttribution = this.map.append("div").attr("class", "attribution")
       .html("&copy; <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors")
-    
+
     // common functions
     this.z = zoom().scaleExtent([1, 40])
     this.z.on("zoom", e => this.onZoom(e))
@@ -115,9 +110,11 @@ export default class Visor {
     if (!this.legend) {
       this.legend = new Legend(this.sidebar, {
         range: this.range,
-        colorScale: this.colorScale
+        colorScale: this.colorScale,
+        svg: this.svg,
+        setColor: this.setColor
       })
-      
+
       this.legend.render()
     }
 
@@ -207,7 +204,16 @@ export default class Visor {
           )
           .on("mouseenter", (e, feature) => this.onMouseenter(e, { feature, months: this.currentMonths, current: this.currentMonths[this.currentMonthIx] }))
           .on("mouseleave", e => this.onMouseleave(e))
-          .on("click", (_, d) => this.onFeatureClick(d)),
+          .on("click", (_, d) => this.onFeatureClick(d))
+          .on("legend-mouseenter", (e, d) => {
+            const [start, end] = e.detail
+            const value = getClosestValue({ feature: d, months: this.currentMonths, i: this.currentMonthIx })
+            return select(e.target)
+              .transition("mouse")
+              .filter(() => (start <= value && end >= value))
+              .attr("fill", "var(--heading)")
+          })
+          .on("legend-mouseleave", (e) => select(e.target).transition("mouse").attr("fill", d => this.setColor(d))),
         update => update
           .call(update => update
             .transition(t)
@@ -245,20 +251,8 @@ export default class Visor {
       .style("pointer-events", "none")
   }
 
-  getClosestValue({ feature, months, i }) {
-    let match = undefined
-
-    while (i >= 0) {
-      match = getValues(feature)[months[i]]
-      if (match) break
-      i--
-    }
-
-    return match
-  }
-
   setColor(feature) {
-    return this.colorScale(this.getClosestValue({ feature, months: this.currentMonths, i: this.currentMonthIx }) || 0)
+    return this.colorScale(getClosestValue({ feature, months: this.currentMonths, i: this.currentMonthIx }) || 0)
   }
 
   onMapClick({ target }) {
@@ -368,7 +362,7 @@ export default class Visor {
 
   onTooltipContent({ feature, months, current }) {
     const dateCell = cell => formatDate(new Date(cell), { month: "short", year: "2-digit" })
-    const valueCell = cell => percent(this.getClosestValue({ feature, months, i: months.indexOf(cell) })) || "--"
+    const valueCell = cell => percent(getClosestValue({ feature, months, i: months.indexOf(cell) })) || "--"
     const tr = (row, isCurrent) => `<tr ${isCurrent ? "class=\"current\"" : ""}><td>${dateCell(row)}</td><td>${valueCell(row)}</td></tr>`
     const caption = `<caption>${getDesc(feature)}</caption>`
     const thead = "<thead><th>Mes</th><th>%</th></thead>"

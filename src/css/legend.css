@@ -17,7 +17,8 @@
 .legend-range {
   display: flex;
   align-items: center;
-  pointer-events: none;
+  cursor: pointer;
+  /* pointer-events: none; */
   color: var(--bg);
 }
 
