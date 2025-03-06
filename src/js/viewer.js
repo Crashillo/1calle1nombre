@@ -18,7 +18,7 @@ export default class Visor {
 
     this.tooltip = new Tooltip(this.map, {
       content: e => {
-        const key = [e.feature.properties.name, e.current].join("--")
+        const key = [e.feature.properties.id, e.current].join("--")
         if (this.tooltipCached.has(key)) {
           return this.tooltipCached.get(key)
         }
@@ -206,7 +206,7 @@ export default class Visor {
           .on("mouseleave", e => this.onMouseleave(e))
           .on("click", (_, d) => this.onFeatureClick(d))
           .on("legend-mouseenter", (e, d) => {
-            const [start, end] = e.detail
+            const [start = 0, end] = e.detail
             const value = getClosestValue({ feature: d, months: this.currentMonths, i: this.currentMonthIx })
             return select(e.target)
               .transition("mouse")
