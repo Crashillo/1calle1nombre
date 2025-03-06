@@ -1,7 +1,7 @@
 import { geoPath, select, extent, interval, transition, scaleThreshold, scalePoint, schemeGreens, zoom, zoomIdentity } from "d3"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
-import { percent, formatDate, getMonthRange, getId, getDesc, getValues, getClosestValue } from "./helpers"
+import { percent, formatDate, getMonthRange, getId, getDesc, getClosestValue } from "./helpers"
 import { infoBtn, githubBtn } from "./icons"
 import { URLS } from "./config"
 import Legend from "./legend"
