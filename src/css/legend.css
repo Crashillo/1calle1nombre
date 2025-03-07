@@ -4,21 +4,12 @@
   transition: transform 250ms cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
-.legend.hidden {
-  transform: translateY(-80%);
-}
-
-@media (width >= 768px) {
-  .legend.hidden {
-    transform: none;
-  }
-}
-
 .legend-range {
   display: flex;
   align-items: center;
   cursor: pointer;
   color: var(--bg);
+  user-select: none;
 }
 
 .legend-range:not(:last-child) {

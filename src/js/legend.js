@@ -6,7 +6,6 @@ export default class Legend {
     this.container = node
       .append("div")
       .attr("class", "legend card")
-      .on("click", e => this.onClick(e))
 
     this.colorScale = colorScale
     this.range = range
@@ -23,12 +22,12 @@ export default class Legend {
           const legendRanges = enter
             .append("div")
             .attr("class", "legend-range")
-            .on("mouseenter", (e, d) => {
-              select(e.target).style("font-weight", "bold")
+            .on("mouseenter touchstart", (e, d) => {
+              select(e.target).style("text-shadow", "-0.06ex 0 0 currentColor, 0.06ex 0 0 currentColor")
               this.svg.selectAll("path").dispatch("legend-mouseenter", { detail: this.colorScale.invertExtent(d) })
             })
-            .on("mouseleave", (e, d) => {
-              select(e.target).style("font-weight", "normal")
+            .on("mouseleave touchend", (e, d) => {
+              select(e.target).style("text-shadow", "none")
               this.svg.selectAll("path").dispatch("legend-mouseleave", { detail: this.colorScale.invertExtent(d) })
             })
           
@@ -51,9 +50,5 @@ export default class Legend {
             return `${percent(start)} - ${percent(end)}`
           })
       )
-  }
-  
-  onClick() {
-    this.container.classed("hidden", !this.container.classed("hidden"))
   }
 }
