@@ -1,4 +1,4 @@
-import { geoPath, select, extent, interval, transition, scaleThreshold, scalePoint, schemeGreens, zoom, zoomIdentity } from "d3"
+import { geoPath, select, min, interval, transition, scaleThreshold, scalePoint, schemeGreens, zoom, zoomIdentity } from "d3"
 import { geoConicConformalSpain } from "d3-composite-projections"
 import { feature, mesh } from "topojson-client"
 import { percent, formatDate, getMonthRange, getId, getDesc, getClosestValue } from "./helpers"
@@ -92,8 +92,10 @@ export default class Visor {
     this.urlCached.set(URLS[0].url, [this.currentFeature, this.currentLines])
 
     // set all possible month-year dates, from the earliest date
-    const [a, b] = extent(this.currentFeature.features.flatMap(({ properties: { values } }) => Object.keys(values)))
-    this.currentMonths = getMonthRange(a, b).map(x => x.toISOString().substring(0, 10))
+    const firstDate = min(this.currentFeature.features.flatMap(({ properties: { values } }) => Object.keys(values)))
+    const lastDate = new Date().toISOString().split('T')[0]
+    
+    this.currentMonths = getMonthRange(firstDate, lastDate).map(x => x.toISOString().substring(0, 10))
 
     // in case no changes were made for the current month
     // const yyyymm = this.props.build.slice(0, 7)
