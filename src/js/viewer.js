@@ -93,7 +93,7 @@ export default class Visor {
 
     // set all possible month-year dates, from the earliest date
     const firstDate = min(this.currentFeature.features.flatMap(({ properties: { values } }) => Object.keys(values)))
-    const lastDate = new Date().toISOString().split('T')[0]
+    const lastDate = new Date().toISOString().split("T")[0]
     
     this.currentMonths = getMonthRange(firstDate, lastDate).map(x => x.toISOString().substring(0, 10))
 
