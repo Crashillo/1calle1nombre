@@ -17,22 +17,22 @@
   "author": "Crashillo",
   "license": "ISC",
   "dependencies": {
-    "d3": "^7.8.5",
-    "d3-composite-projections": "^1.4.0",
+    "d3": "^7.9.0",
+    "d3-composite-projections": "^2.0.0",
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.0",
-    "@eslint/js": "^9.21.0",
-    "@parcel/optimizer-data-url": "^2.10.0",
-    "@parcel/resolver-glob": "^2.10.0",
-    "@parcel/transformer-inline-string": "^2.10.0",
-    "eslint": "^9.21.0",
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
+    "@parcel/optimizer-data-url": "^2.16.4",
+    "@parcel/resolver-glob": "^2.16.4",
+    "@parcel/transformer-inline-string": "^2.16.4",
+    "eslint": "^10.1.0",
     "gh-pages": "^6.3.0",
-    "globals": "^16.0.0",
-    "parcel": "^2.10.0",
-    "stylelint": "^16.15.0",
-    "stylelint-config-standard": "^37.0.0"
+    "globals": "^17.4.0",
+    "parcel": "^2.16.4",
+    "stylelint": "^17.6.0",
+    "stylelint-config-standard": "^40.0.0"
   },
   "alias": {
     "d3": "d3/dist/d3.js"
