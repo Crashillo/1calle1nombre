@@ -24,7 +24,7 @@ body {
   right: var(--space);
   z-index: 2;
   display: grid;
-  grid-gap: var(--space);
+  gap: var(--space);
   pointer-events: none;
   grid: initial;
 }

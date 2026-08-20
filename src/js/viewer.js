@@ -371,12 +371,9 @@ export default class Visor {
     const ellipsis = "<tr><td colspan=\"2\">...</td></tr>"
     const table = content => `<table>${caption}${thead}<tbody>${content}</tbody></table>`
 
-    let content = ""
-    if (!months.slice(-6).includes(current)) {
-      content = `${ellipsis}${tr(current, true)}${ellipsis}${months.slice(-3).map(m => tr(m, current === m)).join("")}`
-    } else {
-      content = months.slice(-6).map(m => tr(m, current === m)).join("")
-    }
+    const content = (!months.slice(-6).includes(current))
+      ? `${ellipsis}${tr(current, true)}${ellipsis}${months.slice(-3).map(m => tr(m, current === m)).join("")}`
+      : months.slice(-6).map(m => tr(m, current === m)).join("")
 
     return table(content)
   }
